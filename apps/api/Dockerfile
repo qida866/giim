@@ -28,7 +28,10 @@ RUN uv pip install --system \
     pytest-asyncio \
     pytest-cov \
     ruff \
-    mypy
+    mypy \
+    feedparser \
+    beautifulsoup4 \
+    python-dateutil
 
 FROM python:3.11-slim AS runtime
 

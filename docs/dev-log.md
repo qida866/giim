@@ -99,3 +99,103 @@ GIIM 项目从 0 到 1 启动。完成项目骨架搭建、Docker Compose 三服
 - Alembic 跑通第一次迁移
 - GET /api/v1/news 接口 + seeding 脚本（10 条假数据）
 - 用 DBeaver 连上 Postgres 看到结构化数据
+
+
+
+## Day 2 - 2026-05-06
+
+### 完成内容
+- 6 张核心业务表设计与建立
+- 第一个业务接口 GET /api/v1/news,支持分页+过滤
+- 10 条多语言仿真数据 seeding
+- 端到端验证:数据库 → ORM → API → JSON
+
+### 工程问题 9:ruff F821 与 SQLAlchemy 字符串 forward reference 冲突
+- 现象:在 model 文件里用 `Mapped[list["EventEntity"]]` 写法时,
+  ruff 静态分析报 F821 Undefined name "EventEntity"
+- 根因:SQLAlchemy 的字符串 forward reference 是运行时解析的,
+  ruff 看不到它的定义
+- 解决:在每个 model 文件顶部加 TYPE_CHECKING 块:
+```python
+  from typing import TYPE_CHECKING
+  if TYPE_CHECKING:
+      from src.models.event import Event, EventEntity
+```
+  这样 mypy/ruff 能看到类型,运行时不会真的执行 import
+- 反思:这是"静态分析工具"和"运行时框架"的语义鸿沟。
+  TYPE_CHECKING 是 PEP 484 给出的标准解法,值得记住。
+
+### 工程问题 10:scripts 目录漏挂载到容器(与 Day 1 tests 同因)
+- 现象:docker compose exec api python scripts/seed_news.py
+  报 No such file or directory
+- 根因:docker-compose.yml 的 api 服务 volumes 没挂载 ./scripts
+- 解决:追加 - ./scripts:/app/scripts,然后 docker compose down + up -d
+- 反思:同类问题一周内出现两次("配置漂移"),
+  说明项目层面缺少"必挂目录的清单约束"。
+  改进方向:在 README 里维护"必须挂载的目录清单",
+  或用 docker compose profiles 区分 dev/prod 配置。
+
+### 工程问题 11:Pydantic response_model 缺失导致 OpenAPI schema 不完整
+- 现象:Swagger 上 200 响应的 Example Value 显示 {"additionalProp1": {}}
+  占位符,而不是真实的返回结构
+- 根因:路由 @router.get() 没声明 response_model 参数,
+  FastAPI 不知道返回的 dict 是什么类型
+- 解决:新建 NewsListResponse(BaseModel) 包装分页结构,
+  在路由装饰器加 response_model=NewsListResponse
+- 反思:response_model 不是"可选的文档美化"——
+  它同时承担返回值类型校验、序列化优化、API 契约文档三个职责。
+  这是面向接口编程的工程素养基础。
+
+
+  ## Day 3 - 2026-05-06
+
+### 完成内容(A 阶段)
+- 添加 3 个采集相关依赖(feedparser/beautifulsoup4/python-dateutil)
+- ingestion 模块骨架建立(rss_fetcher/deduplicator/orchestrator)
+- rss_fetcher.py 完整实现:异步 HTTP + RSS 解析 + HTML 清洗
+- 端到端验证:从真实 BBC RSS 拉取 36 条新闻
+
+### 工程问题 12:Dockerfile 硬编码依赖与 pyproject.toml 漂移
+
+- 现象:在 pyproject.toml 添加新依赖,docker compose build 显示 38 秒
+  "build 完成",但容器内 import feedparser 仍报 ModuleNotFoundError
+  
+- 排查路径(这才是最有价值的部分):
+  1. 第一反应是缓存陷阱,加 --no-cache 重 build,仍失败
+  2. 怀疑 Cursor 没把依赖加进 pyproject.toml,grep 验证后排除
+  3. 怀疑加错位置(进了 dev-only 段),检查后排除
+  4. 检查 Dockerfile 实际安装命令,发现 RUN uv pip install --system
+     后跟的是硬编码 14 个包名,根本不读 pyproject.toml
+  
+- 根因:Day 1 Dockerfile 用了硬编码包名列表,与 pyproject.toml 形成
+  "双真相",任一改动不会触发另一处更新——典型"配置漂移"
+  
+- 解决:在 Dockerfile RUN uv pip install 列表里手动追加 3 个新依赖
+  
+- 反思:
+  - Day 2 已踩过一次配置漂移(scripts 目录),今天又是同类——
+    项目里有多份"真相",治标不治本
+  - 长期改进:Dockerfile 改用 uv pip install --system .
+    让 pyproject.toml 成为唯一依赖来源(标记为 TODO,不在 Day 3 处理)
+  - 排查路径本身的价值:"build 时间从 4s 变 38s"是关键诊断信号
+  - 真实工作中,每个"看似奇怪的现象"都有它的精确含义,
+    工程师的训练就是从中拎出"关键诊断信号"
+
+### 工程问题 13:httpx 默认不跟随 HTTP 重定向
+
+- 现象:第一次跑 RSS 拉取测试,BBC 拉取失败,error='HTTP 302'
+  
+- 根因:
+  - httpx.AsyncClient 默认 follow_redirects=False
+    (这与 requests 库默认行为相反)
+  - 大量历史 RSS feed URL 仍是 http://, 服务都迁了 https://
+  - 不跟随重定向时,302 被 raise_for_status() 抛成错误
+  
+- 解决:创建 client 时显式传 follow_redirects=True
+  
+- 反思:
+  - HTTP 客户端库的"默认行为"差异是经典坑——
+    requests/httpx/aiohttp 三家在重定向、超时、SSL 默认值都不同
+  - 真实工程实践:写 HTTP 客户端时把 timeout/redirects/headers
+    全部 explicitly 配置,不依赖任何默认值
+  - 也是 RSS 采集系统的经典坑:大量 feed 仍用历史 HTTP URL

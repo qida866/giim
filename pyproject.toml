@@ -16,6 +16,9 @@ dependencies = [
     "structlog",
     "httpx",
     "python-dotenv",
+    "feedparser",
+    "python-dateutil",
+    "beautifulsoup4",
 ]
 
 [dependency-groups]
