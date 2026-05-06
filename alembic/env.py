@@ -18,6 +18,7 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from src.db.base import Base
+import src.models  # noqa: F401
 
 config = context.config
 
