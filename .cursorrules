@@ -1,0 +1,39 @@
+## GIIM 项目规则
+
+### 项目简介
+GIIM（Global Intelligence & Impact Monitor）是一个全球事件智能监测与影响分析系统。
+系统会聚合多源新闻，结合 LLM Agent 进行事件聚类、时间线重建、实体识别与影响分析，输出结构化简报。
+
+### 技术栈（当前阶段固定）
+- Python 3.11（依赖管理使用 uv）
+- FastAPI + Uvicorn
+- SQLAlchemy 2.0（异步、Mapped/mapped_column）
+- Alembic
+- Pydantic v2 + pydantic-settings
+- PostgreSQL 16
+- Qdrant
+- Docker Compose
+- structlog
+- pytest + pytest-asyncio
+
+### 代码风格约束
+- 所有 Python 代码必须使用完整 type hints（包含返回值）。
+- 异步逻辑使用 async def，数据库访问必须使用 SQLAlchemy 异步会话。
+- 注释与 docstring 使用中文。
+- 模块职责清晰，单文件不超过 200 行，超过需拆分。
+- 配置全部从环境变量读取，不允许硬编码任何 secret 或连接串。
+
+### 命名规范
+- 文件名与模块名使用 snake_case。
+- 类名使用 PascalCase。
+- 常量使用 UPPER_SNAKE_CASE。
+
+### 测试要求
+- 每个 service 模块都要有对应单元测试。
+- 新增 API 路由必须至少包含一个健康路径或核心逻辑测试。
+- 异步测试默认使用 pytest-asyncio。
+
+### AI 协作指令
+- 不要主动引入未明确列出的第三方库。
+- 涉及跨文件改动时，先给出执行计划，再进行修改。
+- 需求不明确或存在冲突时，先提问确认再执行。
