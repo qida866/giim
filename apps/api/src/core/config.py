@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     embedding_api_key: str = Field(
         default="", alias="EMBEDDING_API_KEY", description="Embedding API Key"
     )
+    ingestion_trigger_token: str = Field(
+        default="dev-trigger-token-change-me",
+        alias="INGESTION_TRIGGER_TOKEN",
+        description="POST /ingestion/trigger 的 query token（生产务必修改）",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

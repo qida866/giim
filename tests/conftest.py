@@ -17,6 +17,7 @@ os.environ.setdefault("DEEPSEEK_API_KEY", "")
 os.environ.setdefault("OPENAI_API_KEY", "")
 os.environ.setdefault("ANTHROPIC_API_KEY", "")
 os.environ.setdefault("EMBEDDING_API_KEY", "")
+os.environ.setdefault("INGESTION_TRIGGER_TOKEN", "dev-trigger-token-change-me")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = PROJECT_ROOT / "apps" / "api"

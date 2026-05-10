@@ -199,3 +199,79 @@ GIIM 项目从 0 到 1 启动。完成项目骨架搭建、Docker Compose 三服
   - 真实工程实践:写 HTTP 客户端时把 timeout/redirects/headers
     全部 explicitly 配置,不依赖任何默认值
   - 也是 RSS 采集系统的经典坑:大量 feed 仍用历史 HTTP URL
+
+
+  ## Day 3 - 2026-05-10
+
+### 完成内容
+
+完整实现 RSS 采集系统的四阶段:
+- A 阶段:单源拉取(rss_fetcher.py)
+- B 阶段:双 hash 去重+批量入库(deduplicator.py)
+- C 阶段:多源并发+错误隔离(orchestrator.py)
+- D 阶段:POST /api/v1/ingestion/trigger HTTP 接口
+
+实测从 5 个真实 RSS 源拉取 462 条新闻,
+端到端验证 HTTP 触发的完整链路。
+
+### 工程问题 14:Docker Desktop 开发环境断档
+
+- 现象:断档 4 天后回来跑 docker compose exec 报
+  "Cannot connect to the Docker daemon"
+- 根因:Mac 重启后 Docker Desktop 不会自动启动,
+  容器(postgres/qdrant/api)默认也不会自动恢复
+- 解决:启动 Docker Desktop -> docker compose up -d
+- 反思:
+  - 这是开发环境工程化盲点
+  - 改进:在 docker-compose.yml 加 restart: unless-stopped,
+    Mac 重启后容器自动恢复
+  - 真实生产环境这种问题不存在,因为 systemd / k8s 兜底
+
+### 工程问题 15:httpx.AsyncClient timeout 范围误解
+
+- 现象:HTTP 日志清晰显示 GET 200 OK,但程序报 Timeout after 10s
+- 排查路径(这是最有价值的部分):
+  1. 第一反应是网络问题,但 200 OK 排除
+  2. 怀疑 feedparser 解析慢,量级不对
+  3. 真相:整个 async with 块累计耗时超过 10s
+- 根因:httpx.AsyncClient(timeout=10.0) 的 timeout 是
+  整个上下文管理器的 cumulative deadline,
+  不只是 HTTP 请求本身。链路是:
+    HTTP 请求 + 重定向跟随 + RSS 下载 +
+    feedparser 同步解析 + BeautifulSoup HTML 清洗 +
+    36 个 Pydantic 模型构造
+  全部累计可能超过 10s
+- 解决:timeout 30s(治标),记 TODO:
+  治本是把 feedparser.parse 拿到 with 块外
+- 反思:
+  - "异步上下文管理器的 deadline" 跟 "请求超时" 不是一个概念
+  - 真实 RSS 采集器要面对很多源,有的服务器慢、有的解析重,
+    必须把网络阶段和解析阶段分开计时
+  - 这是 senior 工程师才会注意到的边界情况
+
+### 重要技术债 TODO
+
+1. **Dockerfile 依赖管理**(Day 3 工程问题 12 留下):
+   - 当前:Dockerfile 硬编码 14 个包名,与 pyproject.toml 形成"双真相"
+   - 目标:改用 uv pip install --system .,让 pyproject.toml 单一来源
+   - 估时:1 小时,优先级中
+
+2. **httpx timeout 拆分**(Day 3 工程问题 15 留下):
+   - 当前:timeout=30 一刀切,网络+解析合计计时
+   - 目标:把 feedparser.parse 拿到 with 块外
+   - 估时:30 分钟,优先级低
+
+3. **异步触发模式**:
+   - 当前:POST /trigger 同步执行 3 秒
+   - 目标:用 Celery/RQ 改成异步,立刻返回 task_id
+   - 估时:2-3 小时,留给 Day 6+
+
+4. **正式鉴权**:
+   - 当前:query param + 静态 token,够开发用
+   - 目标:JWT + 用户系统
+   - 估时:Day 6 用户系统时一并做
+
+5. **test_ingestion_trigger.py 验证**:
+   - 当前:Cursor 自动写了测试,但还没在 CI 验证过能跑
+   - 目标:Day 4 之前花 10 分钟跑 pytest tests/test_ingestion_trigger.py -v
+   - 估时:10-30 分钟

@@ -79,7 +79,7 @@ async def fetch_rss(source: RssSource) -> RssFetchResult:
 
     try:
         async with httpx.AsyncClient(
-            timeout=10.0, headers={"User-Agent": USER_AGENT}, follow_redirects=True
+            timeout=30.0, headers={"User-Agent": USER_AGENT}, follow_redirects=True
         ) as client:
             response = await client.get(source.url)
             response.raise_for_status()
