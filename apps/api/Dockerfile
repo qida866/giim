@@ -12,6 +12,11 @@ RUN apt-get update \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
+# torch CPU 版 (避免拉 NVIDIA CUDA 依赖,节省 2GB+)
+RUN uv pip install --system \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch>=2.0.0
+
 RUN uv pip install --system \
     fastapi \
     "uvicorn[standard]" \
@@ -32,7 +37,8 @@ RUN uv pip install --system \
     feedparser \
     beautifulsoup4 \
     python-dateutil \
-    openai
+    openai \
+    sentence-transformers>=3.0.0
 
 FROM python:3.11-slim AS runtime
 

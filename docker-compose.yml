@@ -37,6 +37,10 @@ services:
     container_name: giim-api
     env_file:
       - .env
+    environment:
+      - EMBEDDING_MODEL_NAME=BAAI/bge-m3
+      - EMBEDDING_CACHE_DIR=/app/.cache/huggingface
+      - EMBEDDING_DEVICE=cpu
     ports:
       - "8000:8000"
     volumes:
@@ -47,6 +51,7 @@ services:
       - ./tests:/app/tests
       - ./scripts:/app/scripts 
       - ./pyproject.toml:/app/pyproject.toml:ro
+      - ./.model_cache:/app/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy

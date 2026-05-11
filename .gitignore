@@ -45,3 +45,6 @@ docker-compose.override.yml
 *.swp
 *.swo
 .DS_Store
+
+# ML 模型缓存 (从 HuggingFace 下载,不进 git)
+.model_cache/

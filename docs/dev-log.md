@@ -375,3 +375,109 @@ pytest -m "not integration"
 - 18:25-19:00：A 阶段代码生成 + review + 测试
 - 19:00-19:25：marker 配置 + 容器重建踩坑 + 修复
 - **总计约 1 小时 40 分钟**（其中约 50 分钟用于 Docker 环境调试）
+
+## Day 4 - 2026-05-11 (B 阶段: 本地 Embedding 集成) 续
+
+### 完成内容
+
+- 新增 Embedding 模块 `apps/api/src/embedding/`：
+  - `schema.py`：5 个 Pydantic 模型（`EmbeddingRequest` / `EmbeddingResult` / `EmbeddingBatchResponse`）+ `EmbeddingText`（`Annotated[str, max_length=8192]`）类型别名 + `EmbeddingErrorType` 4 类枚举 + `EmbeddingError` 异常（4 字段，含 `batch_size`）；
+  - `client.py`：`EmbeddingClient` 封装 sentence-transformers：
+    - 懒加载 + 双重检查锁（`threading.Lock` 防止并发首次请求重复加载）；
+    - `asyncio.to_thread` 包装同步 `model.encode`（避免阻塞 FastAPI event loop）；
+    - 业务级输入校验（空白/超长直接报错，不截断保持语义）；
+    - 6 个日志事件（`loading` / `loaded` / `load_failed` / `encode_start` / `success` / `failed`）；
+    - 4 类错误分类（`MODEL_LOAD` / `INVALID_INPUT` / `ENCODE` / `UNKNOWN`）；
+    - device 可配置（`cpu` / `cuda` / `mps`），从环境变量读取；
+  - `__init__.py`：6 个核心符号统一导出。
+- 新增 `tests/test_embedding.py`：3 个 integration 测试：
+  - `test_embed_single`（单条 1024 维向量）；
+  - `test_embed_batch`（3 条批量，顺序保持）；
+  - `test_embed_semantic_similarity`（跨语言相似度，“美联储宣布降息”和“Fed cuts interest rates”余弦相似度 > 0.7）。
+- 模型选型：`BAAI/bge-m3`（1024 维，中英双语，8192 上下文）。
+- 配置变更：
+  - `pyproject.toml`：追加 `sentence-transformers>=3.0.0` + `torch>=2.0.0`；
+  - `Dockerfile`：分两步安装，torch CPU 版使用 `--index-url https://download.pytorch.org/whl/cpu`（避免 NVIDIA 全家桶）；
+  - `docker-compose.yml`：追加 volume `./.model_cache:/app/.cache/huggingface` + 3 个 `EMBEDDING_*` 环境变量；
+  - `.env.example`：追加 3 个占位符（`EMBEDDING_MODEL_NAME` / `EMBEDDING_CACHE_DIR` / `EMBEDDING_DEVICE`）；
+  - `.gitignore`：追加 `.model_cache/`（模型 2.3GB，不进 git）。
+
+### 测试结果
+
+- 首次跑（含模型下载）：`3 passed in 156.02s`（2 分 36 秒）。
+- 第二次跑（缓存命中）：`3 passed in 32.27s`（32 秒，5 倍提速）。
+- 缓存挂载有效：宿主机 `.model_cache` 持久化 2.3GB，容器重启秒加载。
+
+### Day 4 B 阶段工程问题
+
+#### 工程问题 20: torch 默认装 GPU 版，触发 NVIDIA 全家桶下载
+
+- **现象**：`docker compose build api` 失败，`nvidia-cudnn-cu13`（414MB）下载超时。
+- **诊断信号**：build 日志出现 `nvidia-cublas`（517MB）/ `nvidia-cusparselt-cu13`（210MB）/ `nvidia-nccl-cu13`（187MB）/ `nvidia-cufft`（204MB）/ `nvidia-cusolver`（213MB）等一系列 GPU 包。
+- **根因**：`pip install torch` 默认 wheel 包含 CUDA 链接，自动拉取 2-3GB NVIDIA 全家桶。
+- **解决**：Dockerfile 拆两步安装，torch 先用 `--index-url https://download.pytorch.org/whl/cpu` 单独安装 CPU 版。
+- **副作用（正向）**：build 时间从约 18 分钟降到 3-5 分钟，镜像缩小约 2GB。
+- **反思**：
+  - PyPI 默认 wheel 常面向“最常见硬件配置”（torch 默认 GPU）；
+  - CPU-only 部署必须显式声明，否则会被动承受 GPU 依赖膨胀；
+  - **ML 部署的隐藏成本：依赖膨胀往往比代码膨胀严重一个数量级。**
+
+#### 工程问题 21: mypy 下载网络超时
+
+- **现象**：第二次 docker build 失败，`mypy`（13.2MB）下载超时。
+- **根因**：PyPI 国际访问偶发不稳定。
+- **解决**：直接重试 `docker compose build api`；uv 会复用已下载缓存，只补缺失包，1-2 分钟恢复成功。
+- **反思**：
+  - 大批量依赖一次性安装时，任何单包超时都会导致整层失败；
+  - **理想做法是按依赖分组多个 RUN 层**，降低单点失败重试成本；
+  - 国内 PyPI 直连不稳是常态，Week 1 收官可评估 `--default-index` 使用清华镜像。
+
+#### 工程问题 22: ML 模型缓存差点被 git 追踪
+
+- **现象**：测试通过后 `git status` 显示 `.model_cache/`（2.3GB）在 untracked 列表。
+- **风险**：若 commit + push，GitHub 100MB 单文件上限会导致 push 失败，同时污染协作者仓库历史。
+- **根因**：`docker-compose.yml` 挂载 `./.model_cache` 到容器，模型下载落在宿主机该目录，git 自动可见。
+- **解决**：`.gitignore` 追加 `.model_cache/`。
+- **反思**：
+  - 任何 GB 级文件都不应进 git；
+  - ML 项目要 day-one 配置 `.gitignore`，不能等下载后补救；
+  - **添加 volume 挂载时，要同步检查 `.gitignore`。**
+
+### 关键技术决策
+
+1. Embedding 模型：`BAAI/bge-m3`（1024 维，中英双语，8192 上下文）。
+2. 库：sentence-transformers（API 友好度高于 FlagEmbedding）。
+3. 设备：容器内 CPU（Mac MPS 容器访问不到，且生产部署通常优先 CPU 基线）。
+4. 加载策略：懒加载 + 双重检查锁（避免并发首次请求重复加载 2.3GB 模型）。
+5. 缓存策略：volume 挂载到宿主机，持久化 + 5 倍提速。
+6. 异步策略：`asyncio.to_thread` 包装同步 encode（CPU 密集任务不能阻塞 event loop）。
+7. torch wheel：使用 CPU index 安装，规避 GPU 全家桶。
+
+### TODO (技术债)
+
+[继承自 Day 4 A 阶段]
+1-5 见 A 阶段记录。
+
+[Day 4 B 阶段新增]
+6. Dockerfile 一次性安装 24 个包，任一失败会导致整层重做；Week 1 收官评估 BuildKit `--mount=type=cache` 或按依赖分组多 RUN 层。
+7. 国内 PyPI 网络不稳，Week 1 收官评估 `--default-index` 切换清华镜像。
+8. `huggingface_hub` 的 `hf_xet.download_files()` DeprecationWarning：等待 upstream 升级自动消除，当前不做主动处理。
+
+### 时间统计
+
+- 19:16-19:35：B1.1 方案对齐 + B1.2 设计草案 v1
+- 19:35-20:00：B1.2 设计草案 v2 + 第 1 批代码生成（只展示）
+- 20:00-20:10：第 1 批代码真实落地 + review
+- 20:10-20:15：第 2 批配置变更（4 个 diff）
+- 20:15-20:35：第一次 build 失败（NVIDIA 全家桶 18 分钟超时）
+- 20:35-20:50：第二次 build 失败（mypy 网络超时）
+- 20:50-21:00：第三次 build 成功（重试）
+- 21:00-21:04：测试通过（3 passed in 156.02s）
+- 21:04-21:10：缓存验证 + `.gitignore` 修复
+- **总计约 1 小时 55 分钟**（其中约 35 分钟用于 Docker build 失败与重试）
+
+### 当前 Day 4 累计进度
+
+- A 阶段（LLM 客户端）：✅ 完成 + commit + push
+- B 阶段（Embedding 集成）：✅ 完成，待 commit
+- 后续：Day 5 做 Qdrant 集合初始化 + 462 条新闻批量回填 embedding + 语义搜索接口

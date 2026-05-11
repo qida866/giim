@@ -20,6 +20,8 @@ dependencies = [
     "python-dateutil",
     "beautifulsoup4",
     "openai>=1.50.0",
+    "sentence-transformers>=3.0.0",
+    "torch>=2.0.0",
 ]
 
 [dependency-groups]
