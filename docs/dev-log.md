@@ -275,3 +275,103 @@ GIIM 项目从 0 到 1 启动。完成项目骨架搭建、Docker Compose 三服
    - 当前:Cursor 自动写了测试,但还没在 CI 验证过能跑
    - 目标:Day 4 之前花 10 分钟跑 pytest tests/test_ingestion_trigger.py -v
    - 估时:10-30 分钟
+
+## Day 4 - 2026-05-11 (A 阶段: LLM 客户端)
+
+### 完成内容
+
+- DeepSeek API 账户开通与充值（¥10），完成 key 配置并通过真实调用验证可用。
+- 新增 LLM 模块 `apps/api/src/llm/`：
+  - `schema.py`：定义 5 个 Pydantic 模型（消息/请求/用量/响应）+ `LLMErrorType` 枚举 + `LLMError` 异常；
+  - `client.py`：封装 `AsyncOpenAI`，支持 3 次指数退避重试（1s/2s/4s）+ 双层超时（httpx 30s + `asyncio.wait_for` 60s）+ 5 类错误分类 + structlog 结构化日志；
+  - `__init__.py`：对外导出 7 个核心符号，统一 import 入口。
+- 新增 `tests/test_llm_client.py`：3 个测试（1 个 unit + 2 个 integration），当前全部通过。
+- `pyproject.toml` 注册 pytest 自定义 marker：`integration`。
+- `docker-compose.yml` 为 `api` service 增加只读挂载：`./pyproject.toml:/app/pyproject.toml:ro`。
+- `Dockerfile` 与 `pyproject.toml` 同步追加 `openai>=1.50.0`，修复容器重建后依赖丢失问题。
+
+### Day 4 工程问题
+
+#### 工程问题 16: API key 长度的先验假设错误
+
+- **现象**：用 `awk` 看到 key 长度是 35，误以为“正确 key 应该是 51”，来回验证浪费约 20 分钟。
+- **根因**：不同平台 key 规则不同：OpenAI 常见约 51，Anthropic 约 108，DeepSeek 是 35；把“某个平台经验值”当成通用规则是错误先验。
+- **解决**：不再用长度做真伪判断，直接做最小 API 调用验证。
+- **反思**：
+  - 先验在工程里只能作为“线索”，不能作为“证据”；
+  - 能跑通的调用才是唯一真相（runtime truth > assumption）。
+
+#### 工程问题 17: Docker 容器内 uv/包管理三重陷阱
+
+- **现象**：容器重建后 `openai` 包消失，测试报 `ModuleNotFoundError`。
+- **诊断过程**：
+  - 18:14 首次执行 `docker compose exec api uv pip install openai`，报 `uv: not found`；
+  - 18:14 改用 `pip install openai` 临时成功，测试通过；
+  - 19:10 修改 `docker-compose.yml` 挂载 `pyproject.toml` 后执行 `docker compose up -d api`；
+  - 19:11 再跑测试，重新报 `ModuleNotFoundError: No module named 'openai'`。
+- **三重根因**：
+  1. **uv binary 跨 stage 丢失**：Dockerfile 为 multi-stage；builder 装在 `/root/.local/bin/uv`，runtime 只 `COPY /usr/local`，导致 `uv` 命令不在最终镜像；
+  2. **依赖双真相漂移**：Dockerfile 硬编码依赖列表 vs `pyproject.toml` 声明式依赖，两边都漏 `openai`；
+  3. **运行时安装不持久**：`docker exec pip install` 只对当前容器生效，重建后必丢。
+- **临时解决**：`openai` 同时加入 `pyproject.toml` + Dockerfile，然后 rebuild。
+- **彻底解决（TODO）**：
+  - Dockerfile 改为 `COPY pyproject.toml ./` + `uv pip install --system -e .`，消除依赖双真相；
+  - runtime stage 显式复制 uv binary（`/root/.local/bin/uv`）；
+  - 计划 Week 1 收官统一处理。
+- **反思**：
+  - “配置在哪儿存在”不等于“配置在哪儿生效”；
+  - “装上了包”不等于“包会永久存在”；
+  - Docker 的核心哲学是声明式构建，而不是命令式补丁。
+
+#### 工程问题 18: Cursor 文件树显示名 vs 磁盘真实文件名
+
+- **现象**：文件树看起来像 `test_llm`，执行 `cat test_llm.py` 报 `No such file`。
+- **诊断信号**：底部状态栏显示 `Ini` 而非 `Python`，提示文件类型异常。
+- **根因**：创建文件时漏了 `.py` 扩展名，磁盘真实文件名是 `test_llm`（无后缀）。
+- **解决**：执行 `mv test_llm test_llm.py` 修正。
+- **反思**：文件树有 UI 呈现层，真正可靠的是磁盘路径 + 语言识别信号。
+
+#### 工程问题 19: pyproject.toml 未被容器看到导致 marker 不生效
+
+- **现象**：宿主机 `pyproject.toml` 已加 `markers`，但容器内 pytest 仍提示 unknown marker warning。
+- **根因**：Day 3 Dockerfile 依赖安装走硬编码列表，镜像内并未携带 `pyproject.toml`；同时 compose 未挂载根目录该文件。
+- **诊断信号**：`docker compose exec api ls /app/pyproject.toml` 报 `No such file`。
+- **解决**：在 compose 中增加只读挂载：
+  - `./pyproject.toml:/app/pyproject.toml:ro`
+- **反思**：
+  - `.env` / Dockerfile / `pyproject.toml` 分别走不同路径（mount / COPY / 缺省不存在）；
+  - 每种配置文件都要单独确认“是否进入容器、何时生效、谁负责更新”。
+
+### 关键技术决策
+
+1. **LLM 选型**：DeepSeek V4 Flash（`deepseek-chat` 路由）
+   - 价格：$0.14/M input + $0.28/M output，适合高频实验；
+   - 未选 Ollama：本机部署成本与速度/质量折中不划算；
+   - 未选其他平台：切换成本高于当前阶段收益。
+2. **Embedding 选型**：本地 `bge-m3`（留到 B 阶段实施）。
+3. **重试策略**：仅 `RATE_LIMIT` / `TIMEOUT` 重试，`AUTH` 立即抛出，避免无效重试浪费时间与 token 成本。
+4. **研发流程**：design-first（先设计草案 -> review -> 再编码），把返工前移到文字层，减少代码层重写。
+
+### TODO (技术债)
+
+[继承自 Day 3]
+1. Dockerfile 改用 `uv pip install --system -e .` 走 `pyproject.toml`，消除依赖双真相（Week 1 收官做）。
+2. RSS 模块的 httpx timeout 细分（连接/读取/总超时拆分），当前 30s 先够用。
+
+[Day 4 新增]
+3. Dockerfile runtime stage COPY uv binary，保留 `uv` 命令（与 TODO #1 一起做）。
+4. `.env` 清理：当前存在 2 行 `DEEPSEEK_API_KEY`（一空一真），保留真实值那行。
+5. integration 测试默认在 CI 跳过，避免外部 API 成本与环境波动：
+
+```bash
+pytest -m "not integration"
+```
+
+### 时间统计
+
+- 17:45-18:14：Day 4 准备（注册 + 充值 + 配 key）
+- 18:14-18:20：安全教训（key 截图泄露，作废并重建）
+- 18:20-18:25：LLM 选型决策
+- 18:25-19:00：A 阶段代码生成 + review + 测试
+- 19:00-19:25：marker 配置 + 容器重建踩坑 + 修复
+- **总计约 1 小时 40 分钟**（其中约 50 分钟用于 Docker 环境调试）

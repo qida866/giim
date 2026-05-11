@@ -31,7 +31,8 @@ RUN uv pip install --system \
     mypy \
     feedparser \
     beautifulsoup4 \
-    python-dateutil
+    python-dateutil \
+    openai
 
 FROM python:3.11-slim AS runtime
 

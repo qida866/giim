@@ -19,6 +19,7 @@ dependencies = [
     "feedparser",
     "python-dateutil",
     "beautifulsoup4",
+    "openai>=1.50.0",
 ]
 
 [dependency-groups]
@@ -37,3 +38,6 @@ target-version = "py311"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: 集成测试,会真实调用外部 API (如 LLM/DB),需要环境变量配置"
+]
