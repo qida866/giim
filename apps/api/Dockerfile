@@ -38,7 +38,9 @@ RUN uv pip install --system \
     beautifulsoup4 \
     python-dateutil \
     openai \
-    sentence-transformers>=3.0.0
+    sentence-transformers>=3.0.0 \
+    scikit-learn>=1.3.0 \
+    numpy>=1.24.0
 
 FROM python:3.11-slim AS runtime
 

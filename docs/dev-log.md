@@ -616,3 +616,148 @@ pytest -m "not integration"
 - B 阶段（批量回填）：✅ 完成，**468** 条向量入库  
 - C 阶段（语义搜索 API）：✅ 完成  
 - **后续**：Day 6 聚类原型（**HDBSCAN**）+ LLM 事件摘要 / 简报生成链路
+
+## Day 6 - 2026-05-14 (聚类原型 + LLM 摘要)
+
+### 完成内容
+
+#### A 阶段：HDBSCAN 聚类原型（`scripts/cluster_news.py`）
+
+- **依赖选型**：使用 **sklearn 1.8.x 内置 `HDBSCAN`**（`from sklearn.cluster import HDBSCAN`），**不**单独安装 `hdbscan` 库，避免 **Cython/C 扩展在 `python:3.11-slim` + ARM64 上缺 gcc 的编译失败**（见工程问题 26）。
+- **数据源**：从 Qdrant **`scroll` 全量**拉取；实测 **468** 个 **1024** 维向量、**2 次** `scroll`（`limit=256`）；**`with_vectors=True`** 强制带向量（默认无向量则聚类无意义）。
+- **4 个辅助函数**：`load_cluster_config` / `scroll_all_points` / `build_matrix_and_titles` / `print_clustering_report`（与设计草案 v2 一致）。
+- **数据完整性**：任一 point **无向量** → `ValueError` + structlog error + **退出码 1**；**不** silent skip；维度与 `QDRANT_VECTOR_SIZE`（默认 1024）对齐校验。
+- **算法参数**：`HDBSCAN(min_cluster_size=5, min_samples=3, metric="euclidean")`；代码注释说明 **bge-m3 已 L2 normalize**，欧氏距离与余弦在该前提下等价，且 **sklearn HDBSCAN 无原生 cosine**。
+- **终端输出**：总点数 / 簇数 / 噪声点与比例 / 平均簇大小（无簇时 `N/A`）+ **Top 10** 大簇 + 每簇 **3** 条 `title` 样例。
+- **环境变量（3 个）**：
+  - `CLUSTER_MIN_SIZE`（默认 5，范围 **2–50**）；
+  - `CLUSTER_MIN_SAMPLES`（默认 3，范围 **1–50**）；`min_samples > min_size` 时 **warn**（sklearn 文档建议）；
+  - `CLUSTER_WRITE_TO_DB`（默认 `false`；`true` 时走 B 阶段写库，见下）。
+- **实测（聚类）**：
+  - 总点数 **468**；
+  - 簇数 **15**（落在「健康可解释」区间）；
+  - 噪声 **247**（**52.8%**；高维 + 密度聚类常见，非实现 bug）；
+  - 平均簇大小 **14.7** 条；
+  - **15** 个簇中约 **12** 个语义边界清晰（主观约 **80%** 高质量）；**首轮即满意**，当日未再调参。
+
+#### B 阶段：聚类结果写回 PostgreSQL（**沿用 Day 2 `events` + `event_news` 体系**）
+
+- **决策反复（重要）**：
+  - 初始方案曾走向「新建与 Day 2 冲突的 `events` / `news.event_id`」；Agent **主动对照** `646e4efcc20b` 迁移后发现 **Day 2 已具备** `events`（**UUID** PK）/ `event_news` / `event_entities` / `briefings` 的 **production-grade** 闭环；
+  - 中间一度出现 **`cluster_events` + `ClusterEvent` ORM** 的兼容折中；经 review **整段撤销**（删迁移、还原模型），**回到 Day 2 单轨 schema**，**不新增 Alembic 迁移**。
+- **写库实现**：`persist_clusters_to_db`（约 **120** 行量级）；`CLUSTER_WRITE_TO_DB=true` 时启用；默认 **`false`** 保证「只跑分析不写库」的安全默认。
+- **清空策略**：`DELETE FROM event_news` → `DELETE FROM events`（依赖 **ON DELETE CASCADE** 清理 `briefings` / `event_entities` 等悬挂引用；**生产环境若有非脚本数据需事先知晓风险**）。
+- **写入语义（简化全量重跑）**：不做跨轮 `cluster_label` 对齐或时序匹配（留 **Day 7+**）；每轮视为 **全量重建**。
+- **`Event` 行**：`title` 取簇内 **第一条**新闻标题作代表（截断 **500** 字）；`first_seen_at` / `last_updated_at` 取簇内新闻 **`published_at` 的 min/max**；`news_count`；`status='active'`；`summary` 仍为 **NULL**（交给 C 阶段）。
+- **`EventNews` 行**：`cluster_method='hdbscan'`；`similarity_score=NULL`（HDBSCAN 不产出逐点得分，见 TODO 16）。
+- **防御性校验**：写入前 **`news_id` 必须均在 PostgreSQL 存在**，否则 **ValueError** 中止写库（防 Qdrant 与 PG 不一致）。
+- **实测（库表）**：
+  - `events`：**15** 行（与簇数一致）；
+  - `event_news`：**221** 行（≈ **468 − 247** 噪声）；
+  - 按 `news_count` 排序的 Top 事件可直观对比「大簇 vs 小簇」；
+  - **数据观察**：部分「事件」**时间跨度达约 11 个月**（长期话题与短期突发被同一密度簇吸纳），在 C 阶段摘要中暴露为主题混杂信号（见工程问题 28）。
+
+#### C 阶段：LLM 事件摘要（`scripts/summarize_events.py`）
+
+- **复用**：Day 4 **`LLMClient.chat(LLMRequest)`**（异步、重试、错误分类）；Day 2 **`events.summary`（`Text`，可 NULL）** 就地更新。
+- **环境变量（2 个）**：`SUMMARIZE_LIMIT`（可选，正整数，限制待处理 **`summary IS NULL`** 事件条数）；`SUMMARIZE_NEWS_PER_EVENT`（**1–10**，默认 **5**）。
+- **选稿规则**：每个事件取 **`published_at DESC`** 的最新 **N** 条；正文参与摘要为 **`title` + 换行 + `content[:500]`**，并对正文做 **`\n`/`\r` → 空格** 单行化；空正文占位 **`(无正文)`**。
+- **Prompt 工程**：
+  - **System**（固定一句）：「你是一位专业新闻编辑, 擅长将多条同一事件的报道凝练为简洁、客观、3 句话的中文摘要。」
+  - **User**：结构化指令 + **5 条硬性要求**（每句 ≤50 汉字、禁编造数字/人名/机构、禁套话、纯文字无 Markdown、禁照抄标题、禁寒暄元话语）；**零样本** = 无 few-shot 示例，**不等于**禁止 system。
+- **LLM 参数**：`temperature=0.3`，`max_tokens=500`。
+- **容错**：单事件 **`LLMError`** / 输出 **strip 后 <20 字** / **无关联新闻** → **continue** + 计数；**不** `rollback` 已成功挂起的其他行（按设计字面 batch commit）。
+- **事务**：**字面** `if (idx + 1) % 5 == 0: await session.commit()`（**含** skip / fail 的 `idx` 推进）；循环结束 **再 `commit` 一次**；任一次 **`commit` 失败** → **`rollback` + return 1**。
+- **实测（摘要）**：
+  - `success_count=15`，`failed_count=0`，`skipped_no_news=0`，`total=15`（**100%** 本轮成功）；
+  - 总耗时约 **29s**（约 **1.9s/事件**）；
+  - Token 量级约 **14.2k prompt + 1.07k completion ≈ 15.3k total**；
+  - 成本约 **¥0.014**（低于预案 **¥0.02–0.05**）；
+  - **跨语言**：英文源簇（如 France encrypted messaging）仍能生成通顺 **中文** 三句摘要（质量待系统化评估，见 TODO 19）。
+
+### Day 6 工程问题
+
+#### 工程问题 26：`hdbscan` C 扩展在 slim 镜像内编译失败（缺 gcc）
+
+- **现象**：`docker compose build` 安装 `hdbscan` 时失败：`error: command 'gcc' failed: No such file or directory`。
+- **根因**：
+  - `hdbscan` 以 **Cython** 实现，常走 **源码编译**；
+  - **ARM64**（Apple Silicon）上未必有匹配 wheel，易回落到 **source build**；
+  - **`python:3.11-slim`** 仅装最小运行时依赖，**无 gcc / build-essential**。
+- **替代方案**：**`scikit-learn>=1.3`** 内置 **`sklearn.cluster.HDBSCAN`**（wheel 交付为主），API 与独立库高度接近；项目已因 **`sentence-transformers`** 间接依赖 sklearn，**无额外 rebuild 心智负担**。
+- **解决**：移除 **`hdbscan`** 依赖声明；保留 **`numpy>=1.24.0`**；显式锁定 **`scikit-learn>=1.3.0`**（`pyproject.toml` + `apps/api/Dockerfile` 第二段 `uv pip install` 列表）。
+- **反思**：
+  - **C 扩展 ≠ 纯 Python**：选型要问一句「wheel 是否覆盖目标架构 + 基础镜像是否带编译链」；
+  - **slim 镜像的代价**：镜像小 ↔ 缺工具链，**ML 依赖**要优先选 **wheel 友好**路径；
+  - **sklearn 优先**：经典聚类/降维/线性模型，先查 sklearn 再考虑专用包，常能换得 **可部署性**。
+
+#### 工程问题 27：教练漏看 Day 2 schema，误推「新建 events」路径；Agent 暴露冲突后回退
+
+- **现象**：B 阶段早期曾生成 **`cluster_events` 迁移 + `ClusterEvent` ORM** 的「双轨」方案，与既有 **`events`（UUID）+ `briefings.event_id`** 等外键世界 **冲突**。
+- **根因**：
+  - **人类（教练）**在拍板 B 阶段 schema 前 **未强制先 read** `646e4efcc20b` 全量对象；
+  - Day 2 设计本身 **优于**「整型 PK + 单表 events」的过度简化想象（UUID、状态字段、关联表、简报版本化）。
+- **解决**：**删除错误迁移文件**；`git checkout` 还原 **`news.py` / `__init__.py`**；**保留/演进** `cluster_news.py` 的 **`persist_clusters_to_db`** 为 **写 Day 2 表**；**零新迁移**。
+- **反思**：
+  - **任何 schema 变更前先 view 迁移与 ORM** —— senior 基本功，写进团队习惯；
+  - **Agent 主动报冲突 > 闷头落地** —— 本次回退链路专业；
+  - **记录人类失误**：dev-log 不只记工具问题，也记 **判断与流程缺陷**；
+  - **`event_news` 中间表** 保留「一条新闻未来可属于多个事件」的 **扩展面**，优于草率 **`news.event_id` 单外键**（在未充分论证前）。
+
+#### 工程问题 28：HDBSCAN 将「长期话题」与「短期突发」吸进同一簇
+
+- **现象**：部分簇 **`published_at` 跨度达约 11 个月**（如法治/民营、外交等政经线），与 **1 天内**的疫情/天气类簇 **时间尺度不一致**。
+- **根因**：
+  - **HDBSCAN 纯密度几何**，**不显式建模时间**；
+  - 政经报道 **措辞与 embedding 流形** 相似，跨月仍可能被同一高密度区域捕获；
+  - **突发公共卫生事件 / 气象** vs **政策/外交长线** 的 **业务颗粒度** 本应不同。
+- **暴露路径**：C 阶段某大簇（如法治民营）**代表标题**与 **LLM 三句摘要** 出现「标题像 A、摘要写 B」的 **主题漂移** —— 端到端 pipeline **用摘要反照聚类质量** 的价值。
+- **解决（当日）**：**不修复**，记入 **Day 7+ TODO**（时间分桶 / 大簇二次聚类 / 时间衰减距离等方案候选）。
+- **反思**：
+  - **真实数据暴露的问题 > 纸面架构臆想**；
+  - **下游任务（摘要）是上游（聚类）的探测器**；
+  - **数据驱动迭代** 是 production ML 的常态路径。
+
+### 关键技术决策
+
+1. **HDBSCAN 实现选型**：**sklearn 内置** > 独立 `hdbscan` 库（**可部署性 / 免编译** 优先）。
+2. **距离度量**：**`metric="euclidean"`**（L2 归一化向量下与 cosine **单调相关**；sklearn HDBSCAN **无** cosine）。
+3. **Schema 复用**：**Day 2 `events` + `event_news`**；**否决** `cluster_events` 双轨。
+4. **写库策略**：**全量 DELETE 后 INSERT**；接受「无稳定 `cluster_label` 跨轮对齐」的现实，换 **简单正确**。
+5. **代表标题**：簇内 **第一条**（按 Qdrant scroll / 矩阵行序与后续 JOIN 顺序一致）；**不做 medoid / 质心新闻**（TODO 14）。
+6. **Prompt 结构**：**system + user 双消息**；**零样本** 定义为 **无 few-shot 示例**，**不**排斥 system 角色设定。
+7. **Batch commit**：**字面** `(idx + 1) % 5 == 0`；**不**按 `success_count`；允许 **空 commit**（PostgreSQL **ms 级**可接受）。
+8. **LLM 解码参数**：`temperature=0.3`，`max_tokens=500`（摘要 **低创造性** + 输出余量）。
+9. **失败策略**：单事件失败 **continue**；**不**全事务 `rollback` 抹掉已成功事件（与设计一致）。
+
+### TODO（技术债）
+
+[继承自 Day 3–5]
+
+- 略（见 Day 5 dev-log 既有条目）。
+
+[Day 6 新增]
+
+13. **`HDBSCAN(..., copy=...)` FutureWarning**：sklearn 未来默认变更；可显式传入 **`copy=False`** 静默（当日未改）。
+14. **代表标题代表性不足**：当前 **首条 title**；未来可考虑 **簇内 medoid** 或 **LLM 从 top-k 标题中选代表**。
+15. **聚类跨轮对齐**：重跑 label 不稳定；长期应用需 **代表向量 + 阈值匹配** 或 **业务主键** 等 **事件持续追踪** 方案。
+16. **`EventNews.similarity_score` 全 NULL**：HDBSCAN 不给出逐点得分；可用 **query 与代表向量距离** 回填（Day 7+）。
+17. **时间维度聚类**：针对工程问题 28，引入 **时间窗口** / **衰减权重** / **大簇二次聚类** 等。
+18. **英文小样本簇**：少量英文新闻因 **语种信号** 被聚在一起；**Week 2** 扩 RSS 平衡语料。
+19. **摘要质量系统化评估**：当日主观 **约 9.2/10**；长期需 **LLM-as-Judge + bad case 库**（Week 2）。
+20. **LLM 配置无单测覆盖**：`DEEPSEEK_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 错误仍依赖 **运行时发现**（与 Day 4 现状同构）。
+
+### 时间统计
+
+- **17:56–18:38**：A 阶段（聚类脚本 + **`hdbscan` → sklearn** 依赖切换与验证；**约 42min**）
+- **18:38–19:45**：B 阶段（含 **`cluster_events` 错误方案、撤销、改写 `persist_clusters_to_db` 为 Day 2 表**；**约 67min**）
+- **19:45–20:35**：C 阶段（设计 **v1→v2** review + `summarize_events.py` 实现；**约 50min**）
+- **20:35–20:55**：D 阶段（**dev-log 本节** + 待 **commit / push**；**约 20min**）
+- **总计约 2h59min**
+
+### 当前 Day 6 累计进度
+
+- A 阶段（HDBSCAN 聚类原型）：✅ 完成；**15** 簇，平均 **14.7** 条/簇  
+- B 阶段（写回 PostgreSQL）：✅ 完成；**events 15** + **event_news 221**  
+- C 阶段（LLM 摘要）：✅ 完成；**15/15** 成功；主观质量 **~9.2/10**  
+- **后续（Day 7+）**：时间感知聚类 / 跨语言语料平衡 / 摘要与聚类的 **系统化评测** / 事件持续追踪
