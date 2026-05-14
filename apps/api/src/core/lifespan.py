@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from src.core.config import settings
 from src.core.logging import get_logger
+from src.embedding import EmbeddingClient
+from src.vector_store import QdrantVectorStore
 
 logger = get_logger(__name__)
 
@@ -23,12 +25,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         future=True,
     )
     qdrant_client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None)
+    embedding_client = EmbeddingClient()
+    vector_store = QdrantVectorStore()
 
     async with db_engine.connect() as connection:
         await connection.execute(text("SELECT 1"))
 
     app.state.db_engine = db_engine
     app.state.qdrant_client = qdrant_client
+    app.state.embedding_client = embedding_client
+    app.state.vector_store = vector_store
     logger.info("应用启动完成", app_env=settings.app_env)
 
     try:

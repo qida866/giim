@@ -481,3 +481,138 @@ pytest -m "not integration"
 - A 阶段（LLM 客户端）：✅ 完成 + commit + push
 - B 阶段（Embedding 集成）：✅ 完成，待 commit
 - 后续：Day 5 做 Qdrant 集合初始化 + 462 条新闻批量回填 embedding + 语义搜索接口
+
+## Day 5 - 2026-05-14 (Vector Store + 端到端集成)
+
+### 完成内容
+
+#### A 阶段：Qdrant 向量存储模块（`apps/api/src/vector_store/`）
+
+- **`schema.py`**
+  - `VectorStoreErrorType` 7 类枚举（含设计阶段主动新增的 `COLLECTION_CONFIG_MISMATCH`，避免配置不匹配时滥用 `UNKNOWN`）；
+  - 6 个 Pydantic 模型（`VectorPoint` / `UpsertRequest` / `UpsertResponse` / `SearchRequest` / `SearchResult` / `SearchResponse`），`extra="forbid"`；
+  - `VectorStoreError` 异常（`error_type` / `original_error` / `message` / `point_count` / `top_k`）；
+  - `VectorPoint.id` / `SearchResult.id` 为 **`int | str`**（后接 B 阶段工程问题 23：贴合 Qdrant 1.12+ 对 point ID 的校验）。
+- **`qdrant_helpers.py`（重构产物，职责分离）**
+  - `unwrap_unexpected`：解包 `UnexpectedResponse` / `ResponseHandlingException` 嵌套；
+  - `extract_vector_params`：兼容 `vectors` 为 `VectorParams` 或 **具名向量 dict** 两种返回形态；
+  - `classify_qdrant_exception`：**4 层**归类（`asyncio.TimeoutError` / SDK 解包 / HTTP 状态码 / body 与 message 关键字中的 dimension 等）；
+  - `ensure_qdrant_collection`：幂等 **三分支**（不存在则创建 / 存在且配置一致则 `already_exists` / 配置不一致则 `COLLECTION_CONFIG_MISMATCH`）；
+  - `scored_points_to_search_results`：`query_points` 结果 → `SearchResult` 列表。
+- **`client.py`：`QdrantVectorStore` 主类（约 210 行，与 LLM / Embedding 客户端体量对齐）**
+  - 懒加载 `_get_client()` 单例 `AsyncQdrantClient`；
+  - **`ensure_collection` 走 EAFP**：`get_collection` 遇 404 再 `create_collection`，**不用** `collection_exists` 前置判断，降低竞态窗口；
+  - 5 个 public 方法：`ensure_collection` / `upsert` / `search` / `count` / `health`；
+  - `search` 使用 `query_points`（`qdrant-client>=1.12.0`）；`filter_conditions` 非 `None` 时显式 `NotImplementedError`（Day 6+）；
+  - **9 个**结构化日志事件（`qdrant_collection_creating` / `created` / `already_exists` / `upsert_start` / `upsert_success` / `upsert_failed` / `search_start` / `search_success` / `search_failed`；配置不匹配另有 `qdrant_collection_config_mismatch` error 级事件）。
+- **`__init__.py`**：按字母序导出 9 个符号（schema + `QdrantVectorStore`）。
+- **`tests/test_vector_store.py`**：6 个测试（**5 integration** + **1 unit**）
+  - 测试集合名 `test_vector_store_{uuid8}`，降低 **pytest-xdist** 并行冲突概率；
+  - `test_search_with_threshold`：Gram-Schmidt 正交分量 + 单位球方向混合，构造**数学硬约束**相似度分层；
+  - 随机单位向量用 **`random.gauss` 归一化**（均匀球面，而非 `uniform(-1,1)` 再归一）；
+  - 本地跑通：**6 passed in ~0.35s**（integration 依赖 Qdrant 容器）。
+- **`pyproject.toml`**：`"qdrant-client"` → **`"qdrant-client>=1.12.0"`**，锁定 `query_points` 等 API 行为可复现。
+
+#### B 阶段：批量回填脚本（`scripts/backfill_embeddings.py`）
+
+- **端到端 ETL**：`PostgreSQL.news`（实际入库 **468** 条）→ `EmbeddingClient`（`bge-m3`）→ `QdrantVectorStore.upsert`；
+- **3 个环境变量**（不入 `.env.example`，`docker compose exec -e` 临时注入）：
+  - `BACKFILL_BATCH_SIZE`（默认 32，范围 1–64）；
+  - `BACKFILL_LIMIT`（可选，只处理前 N 条）；
+  - `BACKFILL_RESET`（`true` 时先 `delete_collection` + warning，再 `ensure_collection` 重建）；
+- **可观测性**：每批 `backfill_batch_progress`（含 `batch_idx` / `total_batches` / `processed` / `total` / **`eta_seconds`** 线性外推）；单批失败 `backfill_batch_failed` 带 **batch_idx / batch_size / offset / error_type / error_message**；结束 `backfill_completed`（`news_count` / `effective_total` / `qdrant_count_after` / `batches` / 耗时统计）；
+- **幂等与跳过**：`news_count==0` → `backfill_no_data`；非 reset 且 `qdrant_count >= news_count` → 全脚本 skip；否则 **全量重跑**，依赖 **upsert 幂等**（不做精细断点文件）；
+- **SQLAlchemy**：`select(News).order_by(News.id).limit().offset()` 分页，完整 ORM 行（可读、易扩展）；
+- **实测**：468 条全部写入，`points_count == 468`。
+
+#### C 阶段：语义搜索 HTTP API（`apps/api/src/routers/search.py`）
+
+- **`POST /api/v1/search`**：`SearchAPIRequest`（`query` 1–500 字、`top_k` 1–50、`score_threshold` 可选）→ 单条 `embed` → `QdrantVectorStore.search` → `SearchAPIResponse`（echo `query`、`results`、`total`、`duration_ms`）；
+- **依赖注入**：`EmbeddingClient` + `QdrantVectorStore` 在 **`lifespan`** 中单例创建，挂 **`app.state`**，路由通过 `Depends(get_embedding_client)` / `Depends(get_vector_store)` 取用；
+- **异常**：`EmbeddingError` / `VectorStoreError` → **`HTTPException` 500**（Pydantic 422 交给 FastAPI 默认处理）；
+- **`news_id` 解析**：payload `news_id` 优先，失败则 **`result.id` 双层 fallback**（与 int 主键策略一致）；
+- **`main.py`**：注册 `search_router`（`prefix=/api/v1`，`tags=["search"]`）；
+- **`core/lifespan.py`**：补充挂载 `embedding_client` / `vector_store`（与既有 `db_engine` / 同步 `QdrantClient` 探活并存）。
+
+### Demo（4 个真实查询）
+
+| 查询 | Top 1 结果（摘要） | duration_ms |
+|------|-------------------|---------------|
+| 「美联储利率政策」 | Federal Reserve signals caution（**跨语言**命中） | **32640**（**含首次模型加载**，冷启动） |
+| 「Tech giants AI competition」 | AI chip startups accelerate（**关键词字面弱相关、语义强相关**） | **61** |
+| 「中美贸易关系」 | 韩正会见中美高级别二轨对话美方代表团 | **111** |
+| 「气候变化全球影响」 | 微视频｜共建清洁美丽世界（**概念对齐**） | **70** |
+
+**结论**：稳态请求 **< 100ms** 量级；跨语言 + 「关键词不重叠但语义相关」在 demo 中得到验证。
+
+### Day 5 工程问题
+
+#### 工程问题 23：Qdrant 1.12+ 严格化 point ID，拒绝数字字符串
+
+- **现象**：B 阶段 backfill 首批 `upsert` 报错：`value 1 is not a valid point ID`。
+- **根因**：服务端只接受 **unsigned integer** 或 **UUID**；`"1"` 这类**数字字符串**既非 int 也非 UUID。
+- **测试盲区**：A 阶段 6 个测试的 point id 一律 `uuid.uuid4()` 字符串，**未覆盖「DB 主键数字当 ID」的生产形态**。
+- **解决**：`schema.VectorPoint.id` / `SearchResult.id` 改为 **`int | str`**；backfill 写入 **`id=news.id`（int）**；`qdrant_helpers` 中不再把 int 强转 `str`。
+- **反思**：
+  - 测试数据应尽量**模拟生产主键与 SDK 约束**，不要为了省事选「更宽松」的 UUID 字符串；
+  - **`int | str` 联合类型**比单一 `str` 更贴近「新闻主键为 int、探索阶段为 UUID」的真实需求；
+  - **带真实 Qdrant 的 integration** 比纯 unit 更能暴露 SDK 行为升级。
+
+#### 工程问题 24：设计草案外的「自由发挥」拆分与单行任务遗漏
+
+- **现象**：Day 5 A 实现阶段，agent 将原计划单文件 `client.py`（约 350 行量级）拆成 **`client.py` ~210 行 + `qdrant_helpers.py` ~165 行**；同期 **`pyproject.toml` 版本锁**一度未在同一批次落地，需后续补做。
+- **评估**：拆分本身**职责清晰**（异常解包 / 集合解析 / ensure 流程 vs 对外门面），逻辑上合理、未发现功能性回归。
+- **问题**：**未在设计提示词中授权**「额外模块文件」，也未显式声明「禁止顺带改依赖」；简单单行修改反而容易被长上下文淹没。
+- **解决**：**接受** `qdrant_helpers` 拆分；**单独**指令完成 `qdrant-client>=1.12.0` 锁定。
+- **反思**：
+  - 对 agent：**复杂创造性任务**易「过度发挥」；**单行/单文件原子修改**应用**命令式、不可扩展**的 prompt（「只改这一行，不要做别的」）；
+  - **design-first** 仍适用于大块功能；同时要在文档里画清 **「允许的新增文件列表」** 与 **红线**；
+  - **人类 review** 仍是防止「惊喜 diff」的最后闸门。
+
+#### 工程问题 25：pytest 子进程日志不进 `docker compose logs api`
+
+- **现象**：容器内跑 `pytest` 通过（6 passed），但 **`docker compose logs api` 看不到** `qdrant_*` structlog 事件。
+- **担心**：是否「假绿」、未真实连 Qdrant？
+- **验证**：`curl` Qdrant `/collections` 可见测试集合创建后又被 fixture 删除的痕迹，**确认 integration 真实执行**。
+- **根因**：pytest 子进程 **stdout / structlog 输出** 与 uvicorn 主进程日志流**不合并**，属 Python 测试常见行为。
+- **解决**：**不作为 bug 修复**；需要时直接在 pytest 终端看输出，或显式配置 logging handler。
+- **反思**：**「日志里看不见」≠「代码没跑」**；排障时避免把「日志缺失」误推为「逻辑未执行」。
+
+### 关键技术决策
+
+1. **Qdrant 集合向量配置**：**1024 维 + cosine**，与 `bge-m3` 及 `normalize=True` 假设一致。
+2. **Point ID 类型**：**`int | str` 联合类型**；生产回填 **`news.id`（int）**。
+3. **`ensure_collection` 策略**：**EAFP**（`get_collection` → 404 再建），避免 **LBYL** `collection_exists` 与并发建集的竞态。
+4. **异常分类粒度**：timeout → SDK 解包 → HTTP 状态码 → body / message 关键字（共 **4 层**感知路径）。
+5. **测试集合命名**：**UUID 后缀**，为 pytest-xdist 预留并行空间。
+6. **测试分层**：`invalid_distance` **纯 unit**（无 Qdrant，CI 可常跑）；其余 **integration** 打 `@pytest.mark.integration`。
+7. **Backfill 策略**：**全量重跑 + upsert 幂等**；粗粒度 **count 与 `news_count` 比较 skip**，不做逐条断点文件。
+8. **Search API 客户端生命周期**：**`lifespan` + `app.state` + `Depends`** 单例，避免每请求 `new` 模型与 Qdrant 客户端（今日可接受复杂度）。
+
+### TODO（技术债）
+
+[继承自 Day 3–4]
+
+- 略（见 Day 4 dev-log 既有条目）。
+
+[Day 5 新增]
+
+9. **Search API 无自动化测试**：当日以 **curl / HTTP demo** 验证；Day 6+ 补 ASGI 或契约测试。
+10. **Qdrant `indexing_threshold` 默认 10000**：当前 **468** 点仍在**线性扫描**区；数据量上升后会自动建 **HNSW**；现阶段 **<100ms** 用户侧无感，持续观察。
+11. **payload 强类型**：尚未引入 `NewsPayload` 一类 Pydantic 约束；待 Day 6 聚类 / 多模块消费 payload 时再演化。
+12. **错误信息外溢**：Search API 将 **`error_type.value`** 拼进 500 `detail`，**开发友好、生产偏泄露**；上线前应收敛为通用文案 + 内部 trace id。
+
+### 时间统计
+
+- **16:21–17:50**：A 阶段（Qdrant 向量模块；含设计草案 v1/v2 review、实现、**agent 拆分 helpers** 与 review；**约 1h29min**）
+- **17:50–18:38**：B 阶段（`backfill_embeddings.py`；含 **工程问题 23** 的 ID 类型修复与全量重跑验证；**约 48min**）
+- **18:38–19:05**：C 阶段（`routers/search.py` + `lifespan` / `main` 接线；**约 27min**，一次打通）
+- **19:05–19:10**：Demo 4 查询（跨语言 + 概念对齐交叉验证）
+- **总计约 2 小时 50 分钟**
+
+### 当前 Day 5 累计进度
+
+- A 阶段（Qdrant 向量存储）：✅ 完成  
+- B 阶段（批量回填）：✅ 完成，**468** 条向量入库  
+- C 阶段（语义搜索 API）：✅ 完成  
+- **后续**：Day 6 聚类原型（**HDBSCAN**）+ LLM 事件摘要 / 简报生成链路

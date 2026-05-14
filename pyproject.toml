@@ -12,7 +12,7 @@ dependencies = [
     "alembic",
     "pydantic",
     "pydantic-settings",
-    "qdrant-client",
+    "qdrant-client>=1.12.0",
     "structlog",
     "httpx",
     "python-dotenv",
