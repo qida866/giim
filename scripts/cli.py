@@ -3,7 +3,7 @@
 用法:
     docker compose exec api python -m scripts.cli today
 
-TODO: 将 _stars_for_score / EVENT_TYPE_LABELS 与 score_events_impact 抽到公共 utils, 去重。
+展示辅助已抽到 src.utils.display; score_events_impact 仍待去重。
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import desc, func, select
@@ -24,29 +24,7 @@ if str(API_ROOT) not in sys.path:
 from src.db.session import AsyncSessionLocal
 from src.models.event import Event
 from src.models.news import News
-
-# TODO(DRY): 与 scripts/score_events_impact.py 重复, 后续抽到 scripts/impact_display.py 等
-EVENT_TYPE_LABELS: dict[str, str] = {"breaking": "[突发]", "ongoing": "[进行]", "topic": "[话题]"}
-
-
-def _stars_for_score(score: float) -> str:
-    """将总分映射为 5 星字符串 (含空星 ☆)。"""
-    if score >= 0.8:
-        return "★★★★★"
-    if score >= 0.6:
-        return "★★★★☆"
-    if score >= 0.4:
-        return "★★★☆☆"
-    if score >= 0.2:
-        return "★★☆☆☆"
-    return "★☆☆☆☆"
-
-
-def _event_type_label(event_type: str | None) -> str:
-    """event_type 英文字段转终端中文标签 (含方括号)。"""
-    if event_type is None:
-        return "[?]"
-    return EVENT_TYPE_LABELS.get(event_type, f"[{event_type}]")
+from src.utils.display import duration_str, event_type_label, stars_for_score
 
 
 def _format_date_utc(dt: datetime) -> str:
@@ -54,16 +32,6 @@ def _format_date_utc(dt: datetime) -> str:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc).date().isoformat()
-
-
-def _duration_str(first_seen_at: datetime, last_updated_at: datetime) -> str:
-    """首发至末更的时间跨度中文描述。"""
-    diff: timedelta = last_updated_at - first_seen_at
-    if diff < timedelta(days=1):
-        return "今天"
-    if diff < timedelta(days=7):
-        return f"{diff.days} 天"
-    return f"{diff.days} 天 (长期话题)"
 
 
 def _print_today_header(n: int) -> None:
@@ -79,11 +47,11 @@ def _print_today_header(n: int) -> None:
 def _print_event_block(rank: int, event: Event) -> None:
     """打印单条事件的格式化块。"""
     score = float(event.impact_score) if event.impact_score is not None else 0.0
-    stars = _stars_for_score(score)
-    label = _event_type_label(event.event_type)
+    stars = stars_for_score(score)
+    label = event_type_label(event.event_type)
     d1 = _format_date_utc(event.first_seen_at)
     d2 = _format_date_utc(event.last_updated_at)
-    dur = _duration_str(event.first_seen_at, event.last_updated_at)
+    dur = duration_str(event.first_seen_at, event.last_updated_at)
 
     print(f"\n#{rank}  {stars} {label} {score:.2f}")
     print(f"    📰 {event.title}")

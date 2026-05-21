@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.exceptions import register_exception_handlers
 from src.core.lifespan import lifespan
+from src.routers.events import router as events_router
 from src.routers.health import router as health_router
 from src.routers.ingestion import router as ingestion_router
 from src.routers.news import router as news_router
@@ -23,5 +24,6 @@ app.add_middleware(
 register_exception_handlers(app)
 app.include_router(health_router, prefix="/api/v1", tags=["health"])
 app.include_router(news_router, prefix="/api/v1", tags=["news"])
+app.include_router(events_router, prefix="/api/v1", tags=["events"])
 app.include_router(search_router, prefix="/api/v1", tags=["search"])
 app.include_router(ingestion_router, prefix="/api/v1")

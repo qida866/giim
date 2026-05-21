@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIIM - 今日重要事件</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.25rem 1rem 2rem;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    .wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #1a1a1a;
+      margin-bottom: 0;
+    }
+
+    header h1 {
+      margin: 0 0 0.35rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    header .subtitle {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .status {
+      padding: 1rem 0;
+      color: #666;
+      text-align: center;
+    }
+
+    .status.error {
+      color: #b00020;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .events {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .event-card {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .event-card:last-child {
+      border-bottom: none;
+    }
+
+    .event-head {
+      margin: 0 0 0.45rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .event-head .rank {
+      color: #333;
+    }
+
+    .event-head .score {
+      font-weight: 500;
+      color: #555;
+    }
+
+    .event-title {
+      margin: 0 0 0.35rem;
+      font-size: 0.98rem;
+      word-break: break-word;
+    }
+
+    .event-meta {
+      margin: 0 0 0.6rem;
+      font-size: 0.88rem;
+      color: #555;
+    }
+
+    .event-summary {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #333;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .event-summary.empty {
+      color: #888;
+      font-style: italic;
+    }
+
+    footer {
+      margin-top: 0;
+      padding-top: 0.85rem;
+      border-top: 2px solid #1a1a1a;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #444;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem 0.75rem 1.5rem;
+        font-size: 14px;
+      }
+
+      header h1 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>GIIM - 全球新闻智能监测</h1>
+      <p class="subtitle" id="subtitle">今日 Top 15 重要事件 (按影响力排序)</p>
+    </header>
+
+    <div id="content">
+      <p class="status" id="loading">加载中…</p>
+    </div>
+
+    <footer id="footer" hidden></footer>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000/api/v1/events/today";
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatGeneratedAt(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const h = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${m}/${day} ${h}:${min}`;
+    }
+
+    function showError(message, raw) {
+      const content = document.getElementById("content");
+      let html = `<p class="status error">${escapeHtml(message)}</p>`;
+      if (raw) {
+        html += `<p class="status error">${escapeHtml(raw)}</p>`;
+      }
+      content.innerHTML = html;
+      document.getElementById("footer").hidden = true;
+    }
+
+    function renderSummary(summary) {
+      if (!summary || !String(summary).trim()) {
+        return '<p class="event-summary empty">(暂无摘要)</p>';
+      }
+      const lines = String(summary).split("\n").filter((line) => line.trim());
+      if (lines.length === 0) {
+        return '<p class="event-summary empty">(暂无摘要)</p>';
+      }
+      return `<div class="event-summary">${lines.map((l) => escapeHtml(l)).join("<br>")}</div>`;
+    }
+
+    function renderEvent(ev) {
+      const dateStr = formatDate(ev.first_seen_at);
+      const dur = ev.duration_str || "";
+      const datePart = dur ? `${dateStr} (${dur})` : dateStr;
+      const mediaPart = `来自 ${ev.news_count} 家媒体 / ${ev.sources_count} 个来源`;
+
+      return `
+        <li class="event-card">
+          <p class="event-head">
+            <span class="rank">#${ev.rank}</span>
+            ${escapeHtml(ev.stars)}
+            ${escapeHtml(ev.event_type_label)}
+            <span class="score">${Number(ev.impact_score).toFixed(2)}</span>
+          </p>
+          <p class="event-title">📰 ${escapeHtml(ev.title)}</p>
+          <p class="event-meta">📅 ${escapeHtml(datePart)} · ${escapeHtml(mediaPart)}</p>
+          ${renderSummary(ev.summary)}
+        </li>
+      `;
+    }
+
+    function renderEvents(data) {
+      const content = document.getElementById("content");
+      const footer = document.getElementById("footer");
+      const events = data.events || [];
+
+      if (events.length === 0) {
+        content.innerHTML =
+          '<p class="status">暂无评分事件, 请先跑 score_events_impact</p>';
+        footer.hidden = false;
+        footer.textContent = `GIIM 数据: ${data.total_events ?? 0} 事件 | ${data.total_news ?? 0} 新闻 | ${data.total_sources ?? 0} 来源`;
+        if (data.generated_at) {
+          footer.textContent += ` | ${formatGeneratedAt(data.generated_at)}`;
+        }
+        return;
+      }
+
+      const n = events.length;
+      document.getElementById("subtitle").textContent =
+        `今日 Top ${n} 重要事件 (按影响力排序)`;
+
+      content.innerHTML = `<ul class="events">${events.map(renderEvent).join("")}</ul>`;
+
+      footer.hidden = false;
+      let footerText = `GIIM 数据: ${data.total_events} 事件 | ${data.total_news} 新闻 | ${data.total_sources} 来源`;
+      if (data.generated_at) {
+        footerText += ` | ${formatGeneratedAt(data.generated_at)}`;
+      }
+      footer.textContent = footerText;
+    }
+
+    async function loadEvents() {
+      const loading = document.getElementById("loading");
+      try {
+        const response = await fetch(API_URL);
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseErr) {
+          showError("JSON 解析失败", text.slice(0, 500) || String(parseErr));
+          return;
+        }
+        if (!response.ok) {
+          const detail = data.detail ? JSON.stringify(data.detail) : text.slice(0, 300);
+          showError(`请求失败 (${response.status})`, detail);
+          return;
+        }
+        renderEvents(data);
+      } catch (err) {
+        showError(
+          "无法连接 GIIM 后端, 请确认容器运行",
+          err.message || String(err)
+        );
+        if (loading) loading.remove();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadEvents);
+  </script>
+</body>
+</html>
