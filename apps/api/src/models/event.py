@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Index, Integer, PrimaryKeyConstraint, String, Text, func
-from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base
@@ -31,6 +31,20 @@ class Event(Base):
     last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     news_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    impact_score: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        index=True,
+    )
+    event_type: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+    )
+    impact_factors: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

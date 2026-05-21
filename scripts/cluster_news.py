@@ -14,6 +14,7 @@ import os
 import sys
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,8 @@ from sqlalchemy import delete, select
 
 from src.core.logging import get_logger
 from src.db.session import AsyncSessionLocal
+from src.llm import LLMClient, LLMError
+from src.llm.schema import LLMMessage, LLMRequest
 from src.models.event import Event, EventNews
 from src.models.news import News
 
@@ -48,12 +51,13 @@ class ClusterConfig:
     min_cluster_size: int
     min_samples: int
     write_to_db: bool
+    epsilon: float
 
 
 def load_cluster_config() -> ClusterConfig:
     """解析 CLUSTER_* 环境变量,非法则抛出 ValueError。"""
-    raw_size = os.getenv("CLUSTER_MIN_SIZE", "5").strip()
-    raw_samples = os.getenv("CLUSTER_MIN_SAMPLES", "3").strip()
+    raw_size = os.getenv("CLUSTER_MIN_SIZE", "4").strip()
+    raw_samples = os.getenv("CLUSTER_MIN_SAMPLES", "4").strip()
     try:
         min_cluster_size = int(raw_size)
     except ValueError as exc:
@@ -76,12 +80,21 @@ def load_cluster_config() -> ClusterConfig:
             min_cluster_size=min_cluster_size,
         )
 
+    raw_epsilon = os.getenv("CLUSTER_EPSILON", "0.3").strip()
+    try:
+        epsilon = float(raw_epsilon)
+    except ValueError as exc:
+        raise ValueError(f"CLUSTER_EPSILON 非法: {raw_epsilon!r}") from exc
+    if epsilon < 0.0 or epsilon > 1.0:
+        raise ValueError(f"CLUSTER_EPSILON 须在 0.0-1.0 之间, 当前为 {epsilon}")
+
     write_to_db = os.getenv("CLUSTER_WRITE_TO_DB", "false").strip().lower() == "true"
 
     return ClusterConfig(
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
         write_to_db=write_to_db,
+        epsilon=epsilon,
     )
 
 
@@ -222,12 +235,76 @@ def _news_id_from_record(record: models.Record) -> int:
     return int(payload["news_id"])
 
 
+async def _select_representative_title(
+    llm: LLMClient,
+    cluster_titles: list[str],
+) -> str:
+    """让 LLM 从簇内多个标题里选最具代表性的, 不能选则返回第一条。
+
+    性能: 限制最多看 10 条标题, 防止 prompt 过长.
+    LLM 失败或返回非法数字 → fallback 到第一条.
+    """
+    sample_titles = cluster_titles[:10]
+
+    if len(sample_titles) == 1:
+        return sample_titles[0]
+
+    numbered = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(sample_titles))
+
+    prompt = f"""下面是同一新闻事件簇内的 {len(sample_titles)} 条新闻标题:
+
+{numbered}
+
+请从中选出**最具代表性**的 1 条作为整个事件的代表标题, 要求:
+1. 该标题应该最能概括所有标题的共同主题
+2. 避免太宽泛或太具体
+3. 优先选择中性、客观的表述
+
+请只输出 1 个数字 (1-{len(sample_titles)}), 不要任何其他文字。"""
+
+    try:
+        response = await llm.chat(
+            LLMRequest(
+                messages=[LLMMessage(role="user", content=prompt)],
+                temperature=0.1,
+                max_tokens=10,
+            )
+        )
+        text = (response.content or "").strip()
+        try:
+            idx = int(text) - 1
+            if 0 <= idx < len(sample_titles):
+                logger.info(
+                    "cluster_representative_title_selected",
+                    selected_idx=idx,
+                    total_candidates=len(sample_titles),
+                )
+                return sample_titles[idx]
+        except ValueError:
+            pass
+        logger.warning(
+            "cluster_representative_title_fallback_invalid",
+            llm_output=text[:100],
+            message="LLM 返回非数字或越界, 使用第一条作 fallback",
+        )
+        return sample_titles[0]
+    except LLMError as exc:
+        logger.warning(
+            "cluster_representative_title_fallback_llm_error",
+            error_type=exc.error_type.value,
+            error_message=str(exc),
+            message="LLM 调用失败, 使用第一条作 fallback",
+        )
+        return sample_titles[0]
+
+
 async def persist_clusters_to_db(
     records: list[models.Record],
     labels: NDArray[np.int64],
     titles: list[str],
 ) -> dict[str, int]:
     """把聚类结果写入 events + event_news 表. 返回统计 (event_count / link_count)。"""
+    llm = LLMClient()
     event_count = 0
     link_count = 0
     async with AsyncSessionLocal() as session:
@@ -250,7 +327,7 @@ async def persist_clusters_to_db(
                 cluster_titles = [titles[i] for i in cluster_indices]
 
                 unique_ids = list(dict.fromkeys(cluster_news_ids))
-                stmt = select(News.id, News.published_at).where(News.id.in_(unique_ids))
+                stmt = select(News.id, News.title, News.published_at).where(News.id.in_(unique_ids))
                 result = await session.execute(stmt)
                 rows = result.all()
                 if len(rows) != len(unique_ids):
@@ -258,12 +335,20 @@ async def persist_clusters_to_db(
                         f"簇 {cluster_label} 中部分 news_id 在 PostgreSQL 中不存在 "
                         f"(期望 {len(unique_ids)} 条,实际查到 {len(rows)} 条)",
                     )
-                published_by_id = {int(r[0]): r[1] for r in rows}
-                published_list = [published_by_id[nid] for nid in cluster_news_ids]
+                title_by_id: dict[int, str | None] = {int(r[0]): r[1] for r in rows}
+                published_by_id: dict[int, datetime] = {int(r[0]): r[2] for r in rows}
+                published_list = [published_by_id[int(nid)] for nid in cluster_news_ids]
                 first_seen = min(published_list)
                 last_updated = max(published_list)
-                representative_title = cluster_titles[0]
-                title_db = representative_title[:500]
+                all_titles: list[str] = []
+                for i, nid in enumerate(cluster_news_ids):
+                    db_title = title_by_id[int(nid)]
+                    if db_title is not None and str(db_title).strip():
+                        all_titles.append(str(db_title).strip())
+                    else:
+                        all_titles.append(cluster_titles[i])
+                title = await _select_representative_title(llm, all_titles)
+                title_db = title[:500]
 
                 event = Event(
                     title=title_db,
@@ -374,6 +459,7 @@ async def main() -> int:
             min_cluster_size=cfg.min_cluster_size,
             min_samples=cfg.min_samples,
             metric="euclidean",
+            cluster_selection_epsilon=cfg.epsilon,
         )
         labels = clusterer.fit_predict(matrix)
         labels_i64 = labels.astype(np.int64, copy=False)
