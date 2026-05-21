@@ -34,6 +34,16 @@ DEFAULT_SOURCES: list[RssSource] = [
         url="http://www.people.com.cn/rss/politics.xml",
         language="zh",
     ),
+    RssSource(
+        name="36氪",
+        url="https://www.36kr.com/feed",
+        language="zh",
+    ),
+    RssSource(
+        name="虎嗅",
+        url="https://rss.huxiu.com/",
+        language="zh",
+    ),
 ]
 
 
