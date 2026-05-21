@@ -761,3 +761,272 @@ pytest -m "not integration"
 - B 阶段（写回 PostgreSQL）：✅ 完成；**events 15** + **event_news 221**  
 - C 阶段（LLM 摘要）：✅ 完成；**15/15** 成功；主观质量 **~9.2/10**  
 - **后续（Day 7+）**：时间感知聚类 / 跨语言语料平衡 / 摘要与聚类的 **系统化评测** / 事件持续追踪
+
+## Day 7 - 2026-05-16 (影响力评分 + CLI demo + 产品动机 + 聚类质量修复)
+
+### 完成内容
+
+#### A 阶段：影响力评分（~1h41min，21:12 完成）
+
+- **Alembic 迁移 `c077e7dba698`**：`events` 表新增 3 字段
+  - `impact_score`（`FLOAT`，nullable，indexed）
+  - `event_type`（`VARCHAR(20)`，nullable，indexed）
+  - `impact_factors`（`JSONB`，nullable）
+- **`scripts/score_events_impact.py`**（**269** 行）
+- **4 维评分公式**：
+  - `impact_score = 0.4 × source_count + 0.3 × authority + 0.2 × recency + 0.1 × duration_type`
+- **静态权威源白名单**：
+  - `CHINESE_AUTHORITY`：新华网 / 人民网 / 央视 / 中国日报等（**8** 个）
+  - `ENGLISH_AUTHORITY`：BBC News / Reuters / WSJ / NYT / CNN / Bloomberg 等（**9** 个）
+  - `MAINSTREAM`：The Verge / 36氪 / Hacker News 等（**8** 个）
+- **5 档星级展示**（含 **☆** 空星）
+- **`event_type` 3 档**：`breaking` / `ongoing` / `topic`
+- **实测**：跑 Top 15；**4** 个事件 `recency=1.0`（今天的新事件浮上来）
+
+#### B 阶段：重采集 RSS + 数据状态修复（~30min）
+
+- **发现问题**：所有事件 `recency=0.200`（最低档），数据 **9** 天前陈旧
+- **重跑 ingestion**（**5** 源），入库 **68** 条新数据
+- **工程问题 31 暴露**：政府类中文 RSS 更新慢
+  - BBC News：**38** 入库（全新）
+  - The Verge：**10** 入库（全新）
+  - Hacker News：**20** 入库（全新）
+  - 人民网时政：**0** 入库（**100** 个全 `url_dup`）
+  - 新华网时政：**0** 入库（**294** 个全 `url_dup`，**6** 条解析脏数据）
+- **端到端重跑**：`backfill` → `cluster` → `summarize` → `score`
+
+#### C 阶段：产品动机文档（~45min）
+
+- **`docs/motivation.md`**（**136** 行）**7** 节结构：
+  1. 我观察到的问题（今日头条 / CNN / BBC / Twitter 各自痛点）
+  2. 目标用户（主要：5 分钟扫完昨天；次要：股票交易员盘前）
+  3. GIIM 差异化 USP（**4×4** 对比表）
+  4. 为什么不直接用 LLM（**3** 个不可逾越瓶颈表）
+  5. 关键技术决策（**6** 维）
+  6. 路线图（Week 1–8）
+  7. 项目状态
+- **关键 USP**：
+  - **绝对中立**（vs 今日头条算法推荐 + 美国新闻立场）
+  - **跨语言**（vs 单一语言 / 单一国家视角）
+  - **多视角**（vs 单一来源描述）
+  - **不做**千人千面 + **不做**长篇深度 + **不做**股价 K 线
+  - **允许**社交评论 + **大盘涨跌**辅助
+- **同学反馈引发**：从 **technology-first** → **problem-first**
+
+#### D 阶段：CLI demo + 聚类质量修复（~1.5h）
+
+##### D.1 CLI demo（`scripts/cli.py`，**174** 行）
+
+- **`argparse` 子命令 `today`**
+- **SQL**：`WHERE impact_score IS NOT NULL ORDER BY impact_score DESC LIMIT 15`
+- **输出**：排名 + 星级 + `event_type` + 标题 + 日期 + 来源数 + **完整 3 句摘要**（不截断）
+- **底部统计**：`events` / `news` / `DISTINCT source_name` count
+- **`duration_str` 3 档**：今天 / N 天 / N 天（长期话题）
+- **DRY 注释 TODO**：`_stars_for_score` 与 `score_events_impact` 重复，Week 2+ 抽到 `utils`
+
+##### D.2 端到端发现 LLM 摘要「幻觉」（核心收获 ⭐⭐⭐）
+
+跑 `cli today` 后发现：
+
+- **Lebanon 簇**代表标题：`"Lebanon says Israeli strikes killed 39"`
+- **LLM 摘要**提到「3000 人 / 32 名政治犯 / 2 月 28 日美以攻击伊朗」
+- 标题 **39 人** vs 摘要 **3000 人** → **表面矛盾**
+
+**直觉判断**：LLM 幻觉，prompt 失败
+
+##### D.3 严格诊断（~15min，SQL 看簇内真实新闻）
+
+跑 SQL `JOIN` 看簇内 **6** 条新闻真实内容：
+
+- **4** 条关于 Iran / Trump 外交（Trump 取消袭击 / Iran 政治犯 / Hormuz 海峡）
+- **2** 条关于 Lebanon 冲突
+- 代表标题随机选了 Lebanon，但 **Iran 主题是多数**
+
+**诊断结论**：
+
+- 「3000 人」来自新闻 **478**（Lebanon 死亡数据，**真实**）
+- 「32 名政治犯」来自新闻 **490**（Iran 处决数据，**真实**）
+- 「2 月 28 日美以攻击伊朗」来自新闻 **490**（**真实**）
+- **LLM 完全清白**：是 **HDBSCAN 把不同事件聚成一簇**
+- LLM **忠实总结**了它看到的混合材料
+
+**类似问题**：Cluster 6（**10** 条）代表标题「AI chip startups」，簇内 **5** 条 Musk 诉讼 + **3** 条 AI 商业 + **2** 条金融科技
+
+##### D.4 双层修复
+
+**修复 1：HDBSCAN 调参（~10min）**
+
+`scripts/cluster_news.py` 改动：
+
+- `min_cluster_size` 默认 **5 → 4**
+- `min_samples` 默认 **3 → 4**
+- 新增 **`cluster_selection_epsilon=0.3`**（从 **0**）
+- 新增 **`CLUSTER_EPSILON` env**（**0.0–1.0** 范围）
+
+**结果**：簇数 **16 → 17**，噪声 **47% → 60%**（略升）
+
+**修复 2：LLM 选代表标题（~15min）**
+
+`scripts/cluster_news.py` 新增 **`_select_representative_title`**：
+
+- 簇内最多 **10** 个标题喂 LLM
+- `temperature=0.1`，`max_tokens=10`
+- LLM 返回 **1** 个数字（**1–N**），选对应标题
+- 失败 / 非法 → **fallback 第一条**
+
+**性能**：**17** 个簇 × **1** 次 LLM ≈ **10s**，约 **¥0.005**
+
+**修复验证**（`cluster` + `summarize` + `score` + `cli today`）：
+
+- **AI chip 簇**：代表标题改为 `"Elon Musk loses his case against Sam Altman"` → 摘要（Musk 诉讼败诉）与新标题 **一致** ✅
+- **Lebanon 簇**：代表标题改为 `"Oil prices rise after US and Iran exchange fire"` → 摘要（中东冲突 + 油价 + 政治犯）与新标题 **主题一致** ✅
+- **简历金句**：「通过端到端 CLI demo 验证发现 LLM 看似幻觉的内容，经诊断实际是聚类粗粒度导致，LLM 忠实总结了混合材料。这暴露了 RAG 系统中 **聚类质量 → 摘要质量** 的隐藏耦合。」
+
+#### E 阶段：commit + push（~20min，23:50 完成）
+
+- `git add` **6** 个文件（**4** new + **2** modified）
+- **heredoc** 写入 `/tmp/day7_commit.txt`（避免 zsh `%` 截断，教训承自 Day 6）
+- `git commit -F /tmp/day7_commit.txt`
+- `git push`：`af08324` → **`cd5257f`**
+
+### Day 7 工程问题
+
+#### 工程问题 29：zsh heredoc `%` 字符截断长 commit message
+
+- **现象**：直接 `git commit -m "..."` 长 message 复制粘贴时，含 **`%`** / 中文标点 / 数学符号等在 **zsh** 中会被截断
+- **第 1 次**：`git commit -m "..."` 复制 → message 中间被吃了几行
+- **第 2 次**：heredoc `'EOF'` 单引号 + 文件 → 仍有 **1** 处截断（`%5 == 0`）
+- **第 3 次（Day 7）**：heredoc `'EOF'` + **`-F` 文件** + ASCII 友好字符 → **成功**
+- **教训**：
+  - 长 commit message **必须用 `-F` 从文件读**
+  - heredoc **`'EOF'` 单引号**（禁止变量替换）
+  - 尽量用 **纯 ASCII**（数学符号用文字描述如「等于」）
+  - 提前检查 message 里是否有 **`%`** 等 zsh 特殊字符
+- **反思**：工具链的脏角落往往最坑；写 commit 是高频操作不该卡
+
+#### 工程问题 30：recency 维度全分布在最低档，暴露数据新鲜度需求
+
+- **现象**：Day 7 A 阶段跑 `score` 后所有 **15** 个事件 `recency=0.200`（>7 天档）
+- **根因**：
+  - Day 3 RSS 采集是 **5/10** 跑的
+  - Day 6–7 **没重新采集**
+  - **9** 天数据陈旧 → recency 维度 **无区分度**
+- **暴露的真实问题**：
+  - 用户视角「今天的新闻」价值高于「算法上重要的旧闻」
+  - Production ML 系统的 **「数据新鲜度」跟模型一样重要**
+- **解决**：端到端 **重新采集**
+- **Day 8+ 必须做**：加 **cron / celery beat** 定时采集
+- **反思**：「评分算法对」≠「demo 体验好」；**数据 pipeline 是产品的一部分**
+
+#### 工程问题 31：政府类中文 RSS 更新频率慢
+
+- **现象**：重采集时英文源 **68** 条新数据 / 中文源 **0** 条全 `url_dup`
+  - BBC News：**38** 入库
+  - The Verge：**10** 入库
+  - Hacker News：**20** 入库
+  - 人民网时政：**0** 入库（**100** 个全 `url_dup`）
+  - 新华网时政：**0** 入库（**294** 个全 `url_dup`）
+- **根因**：新华网 / 人民网 RSS **9** 天前列表与今天列表 **90%+** 相同（政府网站不频繁推新）
+- **影响**：中文新闻库 **7** 天后陈旧化，`recency` 全降到 **0.4–0.2**
+- **解决**：Week 2 加更新频率高的中文源（财新 / 界面 / 澎湃 / 钛媒体 / 虎嗅深度）
+  - 当前 **5** 个源里中文只有「政府公文」类型，**信息源不平衡**
+- **反思**：**source diversity** 跟 **source quality** 一样重要
+
+#### 工程问题 32：HDBSCAN 簇颗粒度 ≠ 真实事件颗粒度（核心发现 ⭐⭐⭐）
+
+- **现象**：
+  - **Lebanon 簇** **6** 条（**4** 条 Iran 外交 + **2** 条 Lebanon 冲突）
+  - **AI chip 簇** **10** 条（**5** 条 Musk + **3** 条云/AI + **2** 条金融科技）
+- **表面**：代表标题 vs 摘要主题不一致 → 直觉判断 **LLM 幻觉**
+- **真相**（SQL 验证）：
+  - LLM **没编造**任何数字/事实，全部出自簇内真实新闻
+  - HDBSCAN 把 **语义接近但不同事件** 聚成一簇：
+    - Iran 攻击 ≈ Lebanon 冲突 ≈ Trump 外交（全是中东 + 战争 + 美国）
+    - Musk 诉讼 ≈ AI 数据中心 ≈ 云厂商（全是科技商业）
+- **根因**：
+  - HDBSCAN **纯密度几何**，不显式建模「事件主题」
+  - 高维 **bge-m3** 向量空间中「中东冲突」是个语义簇
+  - 但新闻视角的「事件」应是 **[伊核谈判] vs [黎以冲突]** 分开
+- **双层修复**：
+  1. HDBSCAN **`epsilon=0.3`** 强制簇间距离更大，**缓解但没完全解决**
+  2. **LLM 选代表标题** 让 title 反映 **多数主题**
+- **验证**：
+  - AI chip 簇代表标题从 AI chip → **「Elon Musk loses case」**
+  - Lebanon 簇代表标题从「39 人」→ **「Oil prices rise」**
+  - → 标题与摘要主题 **一致** ✅
+- **留 Day 8+**：
+  - **时间窗口聚类**（按周/天单独聚类，避免跨时间混簇）
+  - **大簇二次细分聚类**（针对 Cluster 8 / Cluster 12 等 **14+** 条）
+  - **LLM 判断「该簇是否同一事件」**（事后过滤）
+- **反思**：
+  - **真实数据暴露的设计问题 > 想象出来的设计问题**
+  - 端到端 pipeline 用 **下游（摘要）反照上游（聚类）** 的价值
+  - **LLM 幻觉指控前先看原始数据**（Day 7 大教训）
+  - production ML 可信度问题往往源于 **数据 pipeline 上游**，不是模型
+
+### 关键技术决策
+
+1. **4 维评分公式 0.4 + 0.3 + 0.2 + 0.1**
+   - `source_count` 占大头，直接反映「媒体关注度」
+   - `duration` 占小头，不让「长期话题」完全排到底
+   - **简洁可解释**，不上 LLM-as-Judge 节省成本
+2. **静态白名单 vs LLM 评 authority**
+   - 选 **静态**，**15** 个事件评分瞬间完成，**deterministic**
+   - LLM-as-Judge 留 **Week 3+**（有更多数据再做）
+3. **`event_type` 仅基于 duration**（突发 / 进行 / 话题）
+   - 简单；但 Day 8+ 发现「`recency=1.0` 但 `duration > 7`」的事件被标为 **topic**
+   - Day 8 改进：**综合 recency + duration**
+4. **影响力评分 + 星级双输出**
+   - 后端存 **`impact_score`（FLOAT 精度）**
+   - 前端展示 **星级**（用户友好）
+   - **用户视角 > 工程师视角**
+5. **`motivation.md` 7 节结构**
+   - 受同学反馈 **「problem-first」** 启发
+   - **对比表**是简历金句容器
+6. **CLI demo 复用 `_stars_for_score` / `EVENT_TYPE_LABELS`**
+   - DRY **暂时违反**，加 **TODO** 标记
+   - Week 2+ 抽到 **`utils/`**
+7. **HDBSCAN `epsilon=0.3`**（而非完全重写聚类算法）
+   - **最小改动**获得改善
+   - 复杂方案（时间窗口聚类）留 **Day 8**
+8. **LLM 选代表标题 + 失败 fallback**
+   - 多 **17** 次 LLM 调用，**¥0.005**，性价比高
+   - 失败回退第一条，**不阻断流程**
+
+### TODO（技术债）
+
+[继承自 Day 5–6]
+
+- 略（见前一日 dev-log 既有条目）。
+
+[Day 7 新增]
+
+21. Day 7 dev-log 写完成：✅ 当前文档  
+22. `recency=1.0` 但 `duration > 7` 的事件应该是 **「recurring」** 类型（不是 `topic`），Day 8 改进 `event_type` 综合判断  
+23. **`event_type` 中「recurring」新增类型**（近期活跃的长期话题）  
+24. **cron / celery beat** 定时采集 RSS（每 **6** 小时），解决数据陈旧  
+25. Week 2 加更新频率高的中文源：财新网 / 界面新闻 / 澎湃新闻 / 钛媒体 / 虎嗅深度；路透中文 / Bloomberg 中文  
+26. **`_stars_for_score` / `EVENT_TYPE_LABELS`** 抽到 `scripts/utils.py`  
+27. **`impact_factors` JSON** 加 schema 校验（Pydantic）  
+28. CLI demo 加 **`today --limit N` / `show <id>` / `search <keyword>`** 子命令  
+29. Top 1 国家公祭日 + 民革大会 + 农工党大会仍混簇，**Day 8 时间窗口聚类**  
+30. Cluster 5 / Cluster 12 英文小样本混簇（France + Japan + Rust / Hacker News 多技术主题），Week 2 扩英文源平衡  
+31. **LLM-as-Judge** 系统化评估摘要（factuality + relevance + completeness），Week 3+
+
+### 时间统计
+
+- **19:02–21:12**：A 阶段（影响力评分 alembic + 脚本设计 + 实现 + 重采集；**约 2h10min**）
+- **21:13–22:00**：B + C 阶段（`motivation` 文档 + 同学反馈消化；**约 45min**）
+- **22:00–22:30**：D.1 CLI demo（**约 30min**）
+- **22:30–23:15**：D.2–D.4 端到端发现 + 诊断 + 双层修复（**约 45min**）
+- **23:15–23:55**：E 阶段（commit + push，含 zsh heredoc 教训应用；**约 40min**）
+- **总计约 4h50min**
+
+### 当前 Day 7 累计进度
+
+- A 阶段（影响力评分）：✅ 完成，**17** 个事件全部评分  
+- B 阶段（重采集）：✅ 完成，入库 **68** 条新数据  
+- C 阶段（`motivation.md`）：✅ 完成，**136** 行 **7** 节  
+- D 阶段（CLI demo + 聚类修复）：✅ 完成，标题与摘要 **一致**  
+- E 阶段（commit + push）：✅ 完成，**`cd5257f`**  
+- **后续（Day 8+ TODO）**：时间窗口聚类 / `event_type` recurring / cron 定时采集 / 中文源扩展 / 系统化评估
