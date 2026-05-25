@@ -1,7 +1,8 @@
-"""GIIM 基础 CLI: 今日 Top 事件、语义搜索等子命令.
+"""GIIM 基础 CLI: 今日 Top 事件、单事件详情、语义搜索等子命令.
 
 用法:
-    docker compose exec api python -m scripts.cli today
+    docker compose exec api python -m scripts.cli today [--limit N]
+    docker compose exec api python -m scripts.cli show <event_id> [--news-limit N]
     docker compose exec api python -m scripts.cli search "AI 芯片" --limit 5
 
 展示辅助已抽到 src.utils.display; score_events_impact 仍待去重。
@@ -16,7 +17,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import String, cast, desc, func, select
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = PROJECT_ROOT / "apps" / "api"
@@ -33,6 +34,11 @@ from src.vector_store import QdrantVectorStore, SearchRequest, SearchResult, Vec
 KEYWORD_MAX_LEN = 500
 SEARCH_LIMIT_MIN = 1
 SEARCH_LIMIT_MAX = 50
+TODAY_LIMIT_MIN = 1
+TODAY_LIMIT_MAX = 50
+SHOW_NEWS_LIMIT_MIN = 1
+SHOW_NEWS_LIMIT_MAX = 20
+UUID_HEX_LEN = 32
 
 
 def _format_date_utc(dt: datetime) -> str:
@@ -83,6 +89,49 @@ def _normalize_content(text: str, max_len: int = 200) -> str:
     if len(one_line) <= max_len:
         return one_line
     return one_line[:max_len]
+
+
+def _iso_week_key(dt: datetime) -> str:
+    """将时间戳转为 ISO 周键 (与 cluster_news 一致)。"""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    utc_dt = dt.astimezone(timezone.utc)
+    year, week, _ = utc_dt.isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+def _event_span_days(first_seen_at: datetime, last_updated_at: datetime) -> int:
+    """首发至末更跨越的自然日数 (至少 1)。"""
+    d1 = first_seen_at.astimezone(timezone.utc).date()
+    d2 = last_updated_at.astimezone(timezone.utc).date()
+    return max(1, (d2 - d1).days + 1)
+
+
+def _normalize_uuid_hex(raw: str) -> str:
+    """校验并规范化 UUID 参数为 32 位小写 hex (无连字符)。"""
+    s = raw.strip().lower()
+    hex_only = s.replace("-", "")
+    if not hex_only or len(hex_only) > UUID_HEX_LEN:
+        msg = f"event_id 须为 1-{UUID_HEX_LEN} 位十六进制 (可含连字符)"
+        raise ValueError(msg)
+    if not all(c in "0123456789abcdef" for c in hex_only):
+        raise ValueError("event_id 仅允许 0-9、a-f 及连字符")
+    return hex_only
+
+
+def _format_impact_factors(raw: dict | None) -> str:
+    """将 impact_factors JSONB 格式化为评分细节行。"""
+    if not isinstance(raw, dict):
+        return "(无评分细节)"
+    keys = ("source_count", "authority", "recency", "duration")
+    parts: list[str] = []
+    for key in keys:
+        val = raw.get(key)
+        if isinstance(val, (int, float)):
+            parts.append(f"{key}={float(val):.2f}")
+        else:
+            parts.append(f"{key}=-")
+    return " | ".join(parts)
 
 
 def _parse_published_date(iso_str: str) -> str:
@@ -237,8 +286,168 @@ async def cmd_search(keyword: str, limit: int) -> int:
     return 0
 
 
-async def cmd_today() -> int:
-    """查询并打印今日 Top 15 (有影响力分的事件)。"""
+async def _resolve_event(session, hex_id: str) -> Event | None:
+    """按完整 UUID 或 hex 前缀解析唯一事件; 无匹配或多匹配返回 None 并打印提示。"""
+    if len(hex_id) == UUID_HEX_LEN:
+        try:
+            uid = uuid.UUID(hex=hex_id)
+        except ValueError:
+            print("无效的 UUID")
+            return None
+        stmt = select(Event).where(Event.id == uid)
+        result = await session.execute(stmt)
+        event = result.scalar_one_or_none()
+        if event is None:
+            print(f"未找到事件: {hex_id}")
+        return event
+
+    pattern = f"{hex_id}%"
+    stmt = select(Event).where(cast(Event.id, String).like(pattern))
+    result = await session.execute(stmt)
+    matches: list[Event] = list(result.scalars().all())
+    if not matches:
+        print(f"未找到前缀匹配的事件: {hex_id}")
+        return None
+    if len(matches) > 1:
+        print(f"前缀 '{hex_id}' 匹配到 {len(matches)} 个事件, 请加长前缀:")
+        for ev in matches[:10]:
+            print(f"  {ev.id}")
+        if len(matches) > 10:
+            print(f"  ... 另有 {len(matches) - 10} 个")
+        return None
+    return matches[0]
+
+
+async def _fetch_show_news(
+    session,
+    event_id: uuid.UUID,
+    limit: int,
+) -> list[tuple[News, str]]:
+    """JOIN event_news + news, 按 published_at 降序取前 N 条。"""
+    stmt = (
+        select(News, EventNews.cluster_method)
+        .join(EventNews, EventNews.news_id == News.id)
+        .where(EventNews.event_id == event_id)
+        .order_by(desc(News.published_at))
+        .limit(limit)
+    )
+    rows = await session.execute(stmt)
+    return [(row[0], str(row[1])) for row in rows.all()]
+
+
+async def _fetch_sources_count(session, event_id: uuid.UUID) -> int:
+    """统计事件关联新闻的去重来源数。"""
+    stmt = (
+        select(func.count(func.distinct(News.source_name)))
+        .select_from(EventNews)
+        .join(News, EventNews.news_id == News.id)
+        .where(EventNews.event_id == event_id)
+    )
+    val = await session.scalar(stmt)
+    return int(val or 0)
+
+
+def _print_show_header() -> None:
+    """打印事件详情页眉。"""
+    sep = "═" * 55
+    print(sep)
+    print("GIIM 事件详情")
+    print(sep)
+
+
+def _print_show_footer() -> None:
+    """打印事件详情页脚。"""
+    print("═" * 55)
+
+
+def _print_show_news_block(rank: int, item: News) -> None:
+    """打印单条原始新闻块。"""
+    pub = _format_date_utc(item.published_at)
+    source = item.source_name or "未知来源"
+    print(f"\n#{rank}  [{source}] {pub}")
+    print(f"    📰 {item.title}")
+    print(f"    🔗 {item.source_url}")
+    snippet = _normalize_content(item.content)
+    print(f"    内容前 200 字: {snippet}")
+
+
+def _print_show_detail(
+    event: Event,
+    sources_count: int,
+    cluster_method: str,
+    news_rows: list[tuple[News, str]],
+    news_limit: int,
+) -> None:
+    """渲染单事件深度视图。"""
+    score = float(event.impact_score) if event.impact_score is not None else 0.0
+    stars = stars_for_score(score)
+    label = event_type_label(event.event_type)
+    dur = duration_str(event.first_seen_at, event.last_updated_at)
+    d1 = _format_date_utc(event.first_seen_at)
+    d2 = _format_date_utc(event.last_updated_at)
+    span_days = _event_span_days(event.first_seen_at, event.last_updated_at)
+    week_key = _iso_week_key(event.first_seen_at)
+
+    _print_show_header()
+    print(f"ID:       {event.id}")
+    print(f"标题:     {event.title}")
+    print(f"类型:     {label}  时长: {dur}")
+    print(f"影响力:   {stars} {score:.2f}")
+    print(f"评分细节: {_format_impact_factors(event.impact_factors)}")
+    print()
+    print("摘要 (LLM 生成):")
+    summary = event.summary
+    if summary is None or not str(summary).strip():
+        print("(暂无摘要)")
+    else:
+        for line in str(summary).splitlines():
+            print(line)
+    print()
+    print(f"时间:     {d1} ~ {d2} ({span_days} 天)")
+    print(
+        f"覆盖:     {event.news_count} 家媒体 / {sources_count} 个来源",
+    )
+    print(f"聚类方法: {cluster_method} ({week_key})")
+    print()
+    print(f"原始新闻 (前 {news_limit} 条, 按时间倒序):")
+    if not news_rows:
+        print("(无关联新闻)")
+    else:
+        for rank, (news_item, _) in enumerate(news_rows, start=1):
+            _print_show_news_block(rank, news_item)
+    print()
+    _print_show_footer()
+
+
+async def cmd_show(event_id_raw: str, news_limit: int) -> int:
+    """按 UUID 或前缀查询单事件并打印深度视图。"""
+    try:
+        hex_id = _normalize_uuid_hex(event_id_raw)
+    except ValueError as exc:
+        print(str(exc))
+        return 1
+
+    async with AsyncSessionLocal() as session:
+        event = await _resolve_event(session, hex_id)
+        if event is None:
+            return 1
+
+        news_rows = await _fetch_show_news(session, event.id, news_limit)
+        sources_count = await _fetch_sources_count(session, event.id)
+        cluster_method = news_rows[0][1] if news_rows else "—"
+
+        _print_show_detail(
+            event,
+            sources_count,
+            cluster_method,
+            news_rows,
+            news_limit,
+        )
+    return 0
+
+
+async def cmd_today(limit: int) -> int:
+    """查询并打印今日 Top N (有影响力分的事件)。"""
     async with AsyncSessionLocal() as session:
         total_events = await session.scalar(select(func.count()).select_from(Event))
         if total_events is None or int(total_events) == 0:
@@ -249,7 +458,7 @@ async def cmd_today() -> int:
             select(Event)
             .where(Event.impact_score.is_not(None))
             .order_by(desc(Event.impact_score).nulls_last())
-            .limit(15)
+            .limit(limit)
         )
         result = await session.execute(stmt)
         rows: list[Event] = list(result.scalars().all())
@@ -299,7 +508,24 @@ def _build_parser() -> argparse.ArgumentParser:
         description="GIIM 命令行工具",
     )
     sub = parser.add_subparsers(dest="command", required=True, help="子命令")
-    sub.add_parser("today", help="显示 Top 15 事件 (按 impact_score 降序)")
+    today_parser = sub.add_parser("today", help="显示 Top 事件 (按 impact_score 降序)")
+    today_parser.add_argument(
+        "--limit",
+        type=int,
+        default=15,
+        help=f"返回条数 ({TODAY_LIMIT_MIN}-{TODAY_LIMIT_MAX}, 默认 15)",
+    )
+    show_parser = sub.add_parser("show", help="显示单事件深度视图")
+    show_parser.add_argument(
+        "event_id",
+        help="事件 UUID (完整或十六进制前缀)",
+    )
+    show_parser.add_argument(
+        "--news-limit",
+        type=int,
+        default=5,
+        help=f"原始新闻条数 ({SHOW_NEWS_LIMIT_MIN}-{SHOW_NEWS_LIMIT_MAX}, 默认 5)",
+    )
     search_parser = sub.add_parser("search", help="语义搜索新闻")
     search_parser.add_argument("keyword", help="搜索关键词")
     search_parser.add_argument(
@@ -318,7 +544,16 @@ async def main_async(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "today":
-        return await cmd_today()
+        if not TODAY_LIMIT_MIN <= args.limit <= TODAY_LIMIT_MAX:
+            parser.error(f"--limit 须在 {TODAY_LIMIT_MIN}-{TODAY_LIMIT_MAX} 之间")
+        return await cmd_today(args.limit)
+
+    if args.command == "show":
+        if not SHOW_NEWS_LIMIT_MIN <= args.news_limit <= SHOW_NEWS_LIMIT_MAX:
+            parser.error(
+                f"--news-limit 须在 {SHOW_NEWS_LIMIT_MIN}-{SHOW_NEWS_LIMIT_MAX} 之间",
+            )
+        return await cmd_show(args.event_id, args.news_limit)
 
     if args.command == "search":
         keyword = args.keyword.strip()
