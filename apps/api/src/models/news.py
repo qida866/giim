@@ -26,6 +26,7 @@ class News(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    title_fuzzy_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="en")
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     fetched_at: Mapped[datetime] = mapped_column(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -16,6 +15,8 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from src.db.session import AsyncSessionLocal
+from src.ingestion.deduplicator import compute_hashes
+from src.ingestion.rss_fetcher import ParsedNewsItem
 from src.models.news import News
 
 
@@ -52,17 +53,30 @@ def _build_seed_payload() -> list[News]:
     for i in range(10):
         source_name = source_names[i % len(source_names)]
         source_url = f"https://example.com/news/{i + 1}"
+        title = titles[i]
         content = contents[i]
+        language = "en" if i < 5 else "zh"
+        published_at = now - timedelta(hours=i * 7)
+        item = ParsedNewsItem(
+            source_name=source_name,
+            source_url=source_url,
+            title=title,
+            content=content,
+            language=language,
+            published_at=published_at,
+        )
+        url_hash, content_hash, title_fuzzy_hash = compute_hashes(item)
         articles.append(
             News(
                 source_name=source_name,
                 source_url=source_url,
-                url_hash=hashlib.sha256(source_url.encode()).hexdigest(),
-                title=titles[i],
+                url_hash=url_hash,
+                title=title,
                 content=content,
-                content_hash=hashlib.sha256(content.encode()).hexdigest(),
-                language="en" if i < 5 else "zh",
-                published_at=now - timedelta(hours=i * 7),
+                content_hash=content_hash,
+                title_fuzzy_hash=title_fuzzy_hash,
+                language=language,
+                published_at=published_at,
                 fetched_at=now,
                 raw_metadata={"source": source_name, "category": "test"},
             )
