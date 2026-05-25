@@ -1,7 +1,7 @@
-"""命令行入口:从 Qdrant 拉取新闻向量,使用 sklearn HDBSCAN 聚类并打印分析结果。
+"""命令行入口:从 Qdrant 拉取新闻向量,按 ISO 周分桶后使用 HDBSCAN 聚类并打印分析结果。
 
 默认不写库;设置 CLUSTER_WRITE_TO_DB=true 时将聚类结果写入 Day 2 的 events / event_news 表。
-编排逻辑见 Day 6 A 阶段设计草案 v2 与 Day 6 B 写库说明。
+编排逻辑见 Day 6 A 阶段设计草案 v2 与 Day 6 B 写库说明; Day 9 起固定按 UTC ISO 周独立聚类。
 
 用法示例:
     docker compose exec api python -m scripts.cluster_news
@@ -12,9 +12,9 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +32,7 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.logging import get_logger
 from src.db.session import AsyncSessionLocal
@@ -52,6 +53,15 @@ class ClusterConfig:
     min_samples: int
     write_to_db: bool
     epsilon: float
+
+
+@dataclass(frozen=True)
+class WindowClusterResult:
+    """单周窗口内的聚类结果 (供写库复用, 避免重复 fit)。"""
+
+    window_key: str
+    indices: list[int]
+    labels: NDArray[np.int64]
 
 
 def load_cluster_config() -> ClusterConfig:
@@ -184,6 +194,141 @@ def build_matrix_and_titles(
     return matrix, titles
 
 
+def _iso_week_key(published_at: datetime) -> str:
+    """将发布时间转为 UTC ISO 周键, 如 2026-W21。"""
+    if published_at.tzinfo is None:
+        utc_dt = published_at.replace(tzinfo=timezone.utc)
+    else:
+        utc_dt = published_at.astimezone(timezone.utc)
+    year, week, _ = utc_dt.isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+async def _load_published_at_by_news_ids(news_ids: list[int]) -> dict[int, datetime]:
+    """批量加载 news.published_at, 供 ISO 周分桶。"""
+    if not news_ids:
+        return {}
+    unique_ids = list(dict.fromkeys(news_ids))
+    async with AsyncSessionLocal() as session:
+        stmt = select(News.id, News.published_at).where(News.id.in_(unique_ids))
+        rows = await session.execute(stmt)
+        return {int(r[0]): r[1] for r in rows.all()}
+
+
+def _bucket_records_by_iso_week(
+    records: list[models.Record],
+    published_map: dict[int, datetime],
+) -> dict[str, list[int]]:
+    """按 published_at 的 UTC ISO 周将 record 下标分桶; 缺失归入 unknown。"""
+    buckets: dict[str, list[int]] = defaultdict(list)
+    missing = 0
+    for i, rec in enumerate(records):
+        news_id = _news_id_from_record(rec)
+        published_at = published_map.get(news_id)
+        if published_at is None:
+            buckets["unknown"].append(i)
+            missing += 1
+            continue
+        buckets[_iso_week_key(published_at)].append(i)
+    if missing > 0:
+        logger.warning(
+            "cluster_published_at_missing",
+            missing_count=missing,
+            message="部分 news_id 无 published_at, 已归入 unknown 桶",
+        )
+    return dict(buckets)
+
+
+def _make_hdbscan_clusterer(cfg: ClusterConfig) -> HDBSCAN:
+    """构造 HDBSCAN 实例 (bge-m3 已 L2 normalize, 欧氏≈余弦)。"""
+    return HDBSCAN(
+        min_cluster_size=cfg.min_cluster_size,
+        min_samples=cfg.min_samples,
+        metric="euclidean",
+        cluster_selection_epsilon=cfg.epsilon,
+    )
+
+
+def cluster_by_iso_week(
+    matrix: NDArray[np.float64],
+    buckets: dict[str, list[int]],
+    cfg: ClusterConfig,
+) -> tuple[NDArray[np.int64], list[dict[str, object]], list[WindowClusterResult]]:
+    """每个 ISO 周窗口独立 HDBSCAN; 返回全局 labels、窗口统计、可写库结果。"""
+    n = int(matrix.shape[0])
+    global_labels = np.full(n, -1, dtype=np.int64)
+    window_stats: list[dict[str, object]] = []
+    window_results: list[WindowClusterResult] = []
+    clusterer = _make_hdbscan_clusterer(cfg)
+
+    for window_key in sorted(buckets.keys()):
+        indices = buckets[window_key]
+        point_count = len(indices)
+        if point_count < cfg.min_cluster_size:
+            window_stats.append(
+                {
+                    "window_key": window_key,
+                    "points": point_count,
+                    "clusters": 0,
+                    "noise_pct": 100.0 if point_count > 0 else 0.0,
+                    "skipped": True,
+                },
+            )
+            logger.info(
+                "cluster_window_skipped",
+                window_key=window_key,
+                point_count=point_count,
+                min_cluster_size=cfg.min_cluster_size,
+            )
+            continue
+
+        sub_matrix = matrix[indices]
+        local_labels = clusterer.fit_predict(sub_matrix).astype(np.int64, copy=False)
+        noise_count = int(np.sum(local_labels == -1))
+        non_noise = local_labels[local_labels != -1]
+        cluster_count = int(np.unique(non_noise).size) if non_noise.size > 0 else 0
+        noise_pct = (100.0 * noise_count / point_count) if point_count > 0 else 0.0
+
+        for j, global_i in enumerate(indices):
+            lab = int(local_labels[j])
+            if lab != -1:
+                global_labels[global_i] = lab
+
+        window_stats.append(
+            {
+                "window_key": window_key,
+                "points": point_count,
+                "clusters": cluster_count,
+                "noise_pct": noise_pct,
+                "skipped": False,
+            },
+        )
+        window_results.append(
+            WindowClusterResult(
+                window_key=window_key,
+                indices=indices,
+                labels=local_labels,
+            ),
+        )
+
+    return global_labels, window_stats, window_results
+
+
+def print_window_summary(window_stats: list[dict[str, object]]) -> None:
+    """打印按 ISO 周分桶的聚类统计表。"""
+    print("============== 按 ISO 周分桶 ==============")
+    print(f"{'window_key':<14} {'points':>8} {'clusters':>10} {'noise%':>8} {'note':>8}")
+    for row in window_stats:
+        window_key = str(row["window_key"])
+        points = int(row["points"])
+        clusters = int(row["clusters"])
+        noise_pct = float(row["noise_pct"])
+        skipped = bool(row.get("skipped", False))
+        note = "skip" if skipped else ""
+        print(f"{window_key:<14} {points:>8} {clusters:>10} {noise_pct:>7.1f}% {note:>8}")
+    print()
+
+
 def print_clustering_report(
     labels: np.ndarray,
     titles: list[str],
@@ -298,12 +443,73 @@ async def _select_representative_title(
         return sample_titles[0]
 
 
+async def _persist_one_cluster(
+    session: AsyncSession,
+    llm: LLMClient,
+    records: list[models.Record],
+    titles: list[str],
+    cluster_indices: list[int],
+    window_key: str,
+    cluster_label: int,
+) -> int:
+    """写入单个簇为 Event + EventNews, 返回本簇 link 条数。"""
+    cluster_news_ids = [_news_id_from_record(records[i]) for i in cluster_indices]
+    cluster_titles = [titles[i] for i in cluster_indices]
+
+    unique_ids = list(dict.fromkeys(cluster_news_ids))
+    stmt = select(News.id, News.title, News.published_at).where(News.id.in_(unique_ids))
+    result = await session.execute(stmt)
+    rows = result.all()
+    if len(rows) != len(unique_ids):
+        raise ValueError(
+            f"窗口 {window_key} 簇 {cluster_label} 中部分 news_id 在 PostgreSQL 中不存在 "
+            f"(期望 {len(unique_ids)} 条,实际查到 {len(rows)} 条)",
+        )
+    title_by_id: dict[int, str | None] = {int(r[0]): r[1] for r in rows}
+    published_by_id: dict[int, datetime] = {int(r[0]): r[2] for r in rows}
+    published_list = [published_by_id[int(nid)] for nid in cluster_news_ids]
+    first_seen = min(published_list)
+    last_updated = max(published_list)
+    all_titles: list[str] = []
+    for i, nid in enumerate(cluster_news_ids):
+        db_title = title_by_id[int(nid)]
+        if db_title is not None and str(db_title).strip():
+            all_titles.append(str(db_title).strip())
+        else:
+            all_titles.append(cluster_titles[i])
+    title = await _select_representative_title(llm, all_titles)
+    title_db = title[:500]
+
+    event = Event(
+        title=title_db,
+        summary=None,
+        status="active",
+        first_seen_at=first_seen,
+        last_updated_at=last_updated,
+        news_count=len(cluster_news_ids),
+        tags=None,
+    )
+    session.add(event)
+    await session.flush()
+
+    for news_id in cluster_news_ids:
+        session.add(
+            EventNews(
+                event_id=event.id,
+                news_id=news_id,
+                similarity_score=None,
+                cluster_method="hdbscan",
+            ),
+        )
+    return len(cluster_news_ids)
+
+
 async def persist_clusters_to_db(
     records: list[models.Record],
-    labels: NDArray[np.int64],
     titles: list[str],
+    window_results: list[WindowClusterResult],
 ) -> dict[str, int]:
-    """把聚类结果写入 events + event_news 表. 返回统计 (event_count / link_count)。"""
+    """按 ISO 周窗口把聚类结果写入 events + event_news 表。"""
     llm = LLMClient()
     event_count = 0
     link_count = 0
@@ -314,65 +520,37 @@ async def persist_clusters_to_db(
             await session.commit()
             logger.info(
                 "cluster_db_cleared",
-                message="已清空 event_news 与 events,准备写入本轮 hdbscan 聚类",
+                message="已清空 event_news 与 events,准备写入本轮按周 hdbscan 聚类",
             )
 
-            for cluster_label in np.unique(labels):
-                if int(cluster_label) == -1:
-                    continue
-                cluster_indices = [i for i, lab in enumerate(labels) if int(lab) == int(cluster_label)]
-                if not cluster_indices:
-                    continue
-                cluster_news_ids = [_news_id_from_record(records[i]) for i in cluster_indices]
-                cluster_titles = [titles[i] for i in cluster_indices]
-
-                unique_ids = list(dict.fromkeys(cluster_news_ids))
-                stmt = select(News.id, News.title, News.published_at).where(News.id.in_(unique_ids))
-                result = await session.execute(stmt)
-                rows = result.all()
-                if len(rows) != len(unique_ids):
-                    raise ValueError(
-                        f"簇 {cluster_label} 中部分 news_id 在 PostgreSQL 中不存在 "
-                        f"(期望 {len(unique_ids)} 条,实际查到 {len(rows)} 条)",
+            for window in window_results:
+                for cluster_label in np.unique(window.labels):
+                    if int(cluster_label) == -1:
+                        continue
+                    cluster_indices = [
+                        window.indices[i]
+                        for i, lab in enumerate(window.labels)
+                        if int(lab) == int(cluster_label)
+                    ]
+                    if not cluster_indices:
+                        continue
+                    links = await _persist_one_cluster(
+                        session,
+                        llm,
+                        records,
+                        titles,
+                        cluster_indices,
+                        window.window_key,
+                        int(cluster_label),
                     )
-                title_by_id: dict[int, str | None] = {int(r[0]): r[1] for r in rows}
-                published_by_id: dict[int, datetime] = {int(r[0]): r[2] for r in rows}
-                published_list = [published_by_id[int(nid)] for nid in cluster_news_ids]
-                first_seen = min(published_list)
-                last_updated = max(published_list)
-                all_titles: list[str] = []
-                for i, nid in enumerate(cluster_news_ids):
-                    db_title = title_by_id[int(nid)]
-                    if db_title is not None and str(db_title).strip():
-                        all_titles.append(str(db_title).strip())
-                    else:
-                        all_titles.append(cluster_titles[i])
-                title = await _select_representative_title(llm, all_titles)
-                title_db = title[:500]
-
-                event = Event(
-                    title=title_db,
-                    summary=None,
-                    status="active",
-                    first_seen_at=first_seen,
-                    last_updated_at=last_updated,
-                    news_count=len(cluster_news_ids),
-                    tags=None,
-                )
-                session.add(event)
-                await session.flush()
-
-                for news_id in cluster_news_ids:
-                    session.add(
-                        EventNews(
-                            event_id=event.id,
-                            news_id=news_id,
-                            similarity_score=None,
-                            cluster_method="hdbscan",
-                        ),
+                    link_count += links
+                    event_count += 1
+                    logger.info(
+                        "cluster_window_cluster_persisted",
+                        window_key=window.window_key,
+                        cluster_id=int(cluster_label),
+                        news_count=links,
                     )
-                    link_count += 1
-                event_count += 1
 
             await session.commit()
             logger.info(
@@ -454,21 +632,17 @@ async def main() -> int:
                 )
             return 1
 
-        # bge-m3 向量已 L2 normalize,欧氏距离与余弦在该前提下等价;sklearn HDBSCAN 无原生 cosine。
-        clusterer = HDBSCAN(
-            min_cluster_size=cfg.min_cluster_size,
-            min_samples=cfg.min_samples,
-            metric="euclidean",
-            cluster_selection_epsilon=cfg.epsilon,
-        )
-        labels = clusterer.fit_predict(matrix)
-        labels_i64 = labels.astype(np.int64, copy=False)
+        news_ids = [_news_id_from_record(rec) for rec in records]
+        published_map = await _load_published_at_by_news_ids(news_ids)
+        buckets = _bucket_records_by_iso_week(records, published_map)
+        labels_i64, window_stats, window_results = cluster_by_iso_week(matrix, buckets, cfg)
 
+        print_window_summary(window_stats)
         print_clustering_report(labels_i64, titles, top_n=10, sample_titles=3)
 
         if cfg.write_to_db:
             try:
-                result = await persist_clusters_to_db(records, labels_i64, titles)
+                result = await persist_clusters_to_db(records, titles, window_results)
                 logger.info("cluster_persist_completed", **result)
             except Exception as exc:  # noqa: BLE001 - 写库失败需记录后退出
                 logger.error(
