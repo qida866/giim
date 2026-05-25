@@ -1030,3 +1030,231 @@ pytest -m "not integration"
 - D 阶段（CLI demo + 聚类修复）：✅ 完成，标题与摘要 **一致**  
 - E 阶段（commit + push）：✅ 完成，**`cd5257f`**  
 - **后续（Day 8+ TODO）**：时间窗口聚类 / `event_type` recurring / cron 定时采集 / 中文源扩展 / 系统化评估
+
+---
+
+## Day 8 - 2026-05-21 (MVP 前端 + CLI search + RSS 扩源 + sources_count)
+
+### 完成内容
+
+#### A 阶段：后端 events API endpoint（~1h）
+
+- **`apps/api/src/utils/display.py`**（**55** 行）— DRY 重构落实 Day 7 TODO 26
+  - 从 `scripts/cli.py` 抽出 **3** 函数 + `EVENT_TYPE_LABELS` 常量
+  - 函数名去掉 leading `_`（公共 API）：`stars_for_score` / `event_type_label` / `duration_str`
+- **`apps/api/src/schemas/events.py`**（**45** 行）
+  - `EventResponse` **14** 字段 + `TodayEventsResponse`
+  - `ConfigDict(extra="forbid")` 防字段漂移
+- **`apps/api/src/routers/events.py`**（**95** 行）
+  - `GET /api/v1/events/today`
+  - `limit` 默认 **15**，范围 **1–50**
+  - 批量查 `sources_count` 避 N+1
+  - **5** 种错误场景处理
+- **`apps/api/src/main.py`** 注册 router（`news → events → search → ingestion`）
+- **`scripts/cli.py`** 同步用 `utils.display`（删除本地重复）
+
+**实测**：`curl` 测试返回完整 **17** events JSON
+
+#### B 阶段：极简前端（~1h）
+
+- **`frontend/index.html`**（**283** 行，单文件）
+  - HTML + CSS + JS 写在一起，不引外部 framework
+  - `fetch GET /api/v1/events/today` + 渲染 Top 15
+  - 白底黑字，`max-width` **800px** 居中，卡片间分割线
+  - 错误处理：后端连不上 / `events` 空 / JSON 解析失败
+- 浏览器本地访问 `http://localhost:8080`（`python -m http.server`）
+- **不部署**，仅本地能用（用户决策：暂不给别人看）
+
+#### C 阶段：CLI search 跨语言子命令（~42min）
+
+- **`scripts/cli.py`** **+186** 行（`search` 子命令）
+- **7** 个 helper 函数：`cmd_search` / `_print_search_header` / `_print_search_block` / `_print_search_footer` / `_normalize_content` / `_parse_published_date` / `_hit_display_fields` / `_fetch_contents_by_ids`
+- 复用 Day 5 `EmbeddingClient` + `QdrantVectorStore`（**直连模块，不走 HTTP**）
+- **关键决策**：
+  - payload key 名是 **`"source"`**（不是 `"source_name"`）— Cursor 主动发现
+  - Qdrant payload **不存 `content`** — 二次查 PG 拿 `News.content`
+  - **不抽** `services/search_service.py`，留 Day 9+
+
+**跨语言验证 ⭐⭐⭐**（核心简历金句）：
+
+- 中文 **「AI 芯片」** → 召回 **9/10** 英文 AI 新闻
+- 相似度 **0.45–0.59** 合理
+- 召回结果全是 AI/Tech 主题，无 false positive
+
+**性能注意**：
+
+- CLI 每次启动重新加载 **bge-m3** 模型 **~13s**
+- API 没这个问题（`lifespan` 一次加载）
+- 留 Day 9+ 决策：HTTP 调用 vs CLI daemon
+
+#### D 阶段：RSS 源扩展（~1.5h，含源调研 + ingestion + 端到端重跑）
+
+- **工程问题 35 调研**：中文主流商业媒体 RSS 困境
+  - 财新网：`rss.caixin.com` **502** / 不稳定
+  - 界面新闻：无公开 RSS
+  - 澎湃新闻：无公开 RSS
+  - Reuters World：**4** 个候选 URL 全部不可达（404 / timeout / 被墙）
+- **决策：选项 C** 加 **2** 个（**36氪 + 虎嗅**），不加钛媒体（同质化）
+  - 理由：**真实多样性 > 虚假多样性**
+  - 简历金句更强
+- **`apps/api/src/ingestion/orchestrator_schema.py`** `DEFAULT_SOURCES` **5 → 7**
+
+**实测 ingestion**：
+
+- **86** 条新数据入库（36氪 **30** + 虎嗅 **26** + HN **20** + Verge **10**）
+- BBC News 突然 **403 Forbidden** ⚠️ 工程问题 36
+- 虎嗅 RSS 解析跳过 **118/144**（**82%**）脏数据 ⚠️ 工程问题 37
+
+**端到端重跑 pipeline**（~2min）：
+
+- `backfill`：**622** 个向量
+- `cluster`：**18** events（**+1**）
+- `summarize`：**17/17** success
+- `score`：**18** events 全部评分
+
+**新 Top 15 事件亮点**：
+
+- **#4** 北京亦庄 AI+产业大会（**9** 条，来自 36氪）⭐ 新事件
+- **#5** SpaceX IPO + Musk vs Altman（**12** 条，36氪 + 英文源）
+- **#12** 中国低空经济政策（**5** 条，来自 36氪）⭐ 新事件
+
+#### E 阶段：CLI `sources_count` 显示 + commit（~30min）
+
+- **`scripts/cli.py`** 同步 API 字段（`cmd_today`）
+  - 加批量查 `sources_count`（跟 `events` router 一致）
+  - `_print_event_block(rank, event, sources_count)`
+  - 输出 **「来自 N 家媒体 / X 个来源」**
+
+**`sources_count` 真实分布**（诚实告诉用户）：
+
+- **8/18** events：`sources_count = 1`（全新华网或人民网）
+- **6/18** events：`sources_count = 2`（新华 + 人民）
+- **4/18** events：`sources_count >= 4`（英文源 + 36氪 / 虎嗅）
+
+**commit + push**（**2** 个 commit）：
+
+- **`e9725694`**（Day 8 主线：API + 前端 + CLI search）
+- **`e18203a`**（Day 8 RSS + CLI `sources_count`）
+- Day 7 dev-log 同时 push：**`0aea5c7`**
+
+### Day 8 工程问题
+
+#### 工程问题 33：`sources.yaml` 不存在，RSS 源硬编码
+
+- **现象**：查找 RSS 配置文件失败，`find` 无 `*.yaml` / `*.toml`
+- **实际位置**：`apps/api/src/ingestion/orchestrator_schema.py` — `DEFAULT_SOURCES` 是 Python 硬编码 `list`
+- **影响**：加新源需改代码（而不是配置），部署后无法 hot reload
+- **反思**：项目早期可接受，Week 3+ 加 `sources.yaml` 配置外置
+
+#### 工程问题 34：RSS 去重漏掉跨日重发
+
+- **现象**：`cli search "习近平外交"` 返回 **5** 条，第 **1/2** 名是同一新闻（「习近平向韩国当选总统李在明致贺电」），仅 `published_at` 差 **1** 天
+- **根因**：
+  - 人民网时政 RSS 在 **2025-06-04** 和 **2025-06-05** 重发同一新闻
+  - URL hash + content hash 不同（URL 末尾有日期参数，content 微差）
+  - 去重逻辑只看 url + content hash，不看 title 相似
+- **影响**：搜索结果重复，用户体验降分
+- **解决**：Day 9+ 加 title fuzzy hash 或 simhash 去重
+- **反思**：看似「内容不同」实际「语义同一」— 工业级去重需多维度
+
+#### 工程问题 35：RSS 数据源真实困境（核心简历素材 ⭐⭐⭐）
+
+- **现象**：Day 8 调研中文 + 国际 RSS 源：
+  - 财新网：`rss.caixin.com` **502 Bad Gateway** / 旧域名不稳定
+  - 界面新闻 / 澎湃新闻：官网**无公开 RSS**
+  - Reuters World **4** 候选 URL：全部不可达（**404** / **timeout**）
+- **根因**：
+  - 国内主流商业媒体**不提供公开 RSS**（商业模式选择，数据控制）
+  - 国际权威源（Reuters/AP）受**网络限制**
+  - 第三方 RSSHub 实例不稳定 + 合规风险
+- **影响**：GIIM「多源聚合」USP 在中文环境受现实约束
+- **解决**：
+  - 短期：加 **36氪 + 虎嗅**（**2** 个真实独立中文商业源）
+  - **不加**钛媒体（同质化，虚假多样性）
+  - Week 3+：接入付费 News API（NewsAPI.org）或自建 RSSHub 实例（合规风险）
+- **反思**：
+  - 工程项目的**现实约束**比代码本身重要
+  - 简历讲 **trade-off**，不是「我加了 5 个源」
+  - **诚实方案 > 虚假多样性**
+
+#### 工程问题 36：BBC News 突然 403 Forbidden
+
+- **现象**：Day 8 重新跑 ingestion 时：`GET http://feeds.bbci.co.uk/news/world/rss.xml` → **HTTP 403**
+- 上次跑（**5/19**）：**200** + **38** 条入库
+- **根因**：BBC RSS 加强反爬，对非浏览器 User-Agent 限流
+- **影响**：英文国际新闻仅靠 HN + The Verge，数据多样性降分
+- **解决**：Day 9 加 User-Agent header 模拟 Chrome
+- **反思**：国际媒体的 RSS 反爬正在收紧，数据 pipeline 真实脆弱点
+
+#### 工程问题 37：虎嗅 RSS 解析跳过 118/144（82% 脏数据）
+
+- **现象**：虎嗅 RSS `item_count=26` 入库，但 `skipped_count=118`
+- **根因可能**：
+  - 虎嗅 RSS 部分 item 缺必填字段（title / link / pub_date）
+  - 项目 RSS schema 校验严格（Pydantic 强类型）
+- **影响**：虎嗅实际入库率仅 **~18%**，数据贡献小
+- **解决**：Day 9 探索 ingestion schema 严格度，或加宽容字段
+- **反思**：商业网站 RSS 质量参差不齐，工程容错很重要
+
+### 关键技术决策
+
+1. **`utils/display.py` 抽离（DRY）** — Day 7 TODO 26 落实；CLI + API 共享 **3** 函数，不重复维护
+2. **`EventResponse` + `extra="forbid"`** — Pydantic 严格模式防字段漂移；production 习惯
+3. **批量查 `sources_count` 避 N+1** — **15** 个 event 不发 **15** 次 SQL，一次 `GROUP BY` 查；senior engineer 习惯
+4. **前端不部署，仅本地能用** — 用户决策：重点是「能力」不是「给别人看」；节省时间；留 Day 9+ 决策部署
+5. **CLI search 选项 B（直连模块，不走 HTTP）** — 跟 `cmd_today` 一致；不依赖 API 启动；性能代价：每次重新加载模型 **~13s**；接受现状，留 Day 9+
+6. **Qdrant payload 不存 `content` — CLI 二次查 PG** — Day 5 设计：payload 只存元数据；CLI 需要 content 时批量查 PG
+7. **RSS 扩源选 2 个不选 3 个** — 36氪 + 虎嗅（真实多样）；钛媒体不加（同质化）；简历金句 trade-off
+8. **`sources_count` 暴露虚假多样性** — 不掩盖「29 家媒体只来自 **1** 个 source」的真相；production engineer 的诚实
+
+### TODO（技术债）
+
+[继承自 Day 5–7]
+
+- 略（见前几日 dev-log 既有条目）。
+
+[Day 8 新增]
+
+32. CLI search 模型加载 **13s** 优化（HTTP 调用 vs daemon mode）  
+33. `sources.yaml` 配置外置（从 Python 硬编码迁出）  
+34. RSS 去重加 title fuzzy hash / simhash（修跨日重发）  
+35. BBC News User-Agent 加（绕过 **403**）  
+36. 虎嗅 RSS schema 严格度调整（修 **82%** 解析丢失）  
+37. RSS 数据源 Week 3+ 考虑 NewsAPI.org 付费方案  
+38. Day 9 探索**时间窗口聚类**彻底解决工程问题 32  
+39. `event_type` 综合 recency + duration 改进（Day 7 TODO 22）  
+40. `_stars_for_score` 抽到 `utils` 已完成，但 `score_events_impact.py` 仍有重复，Week 2 处理  
+41. CLI `show <event_id>` 详情子命令  
+42. CLI `today --limit N` 参数  
+43. 前端部署（Cloudflare Pages）— Day 9+  
+44. 后端 API 部署（Railway / Fly.io）  
+45. CORS 配置审查（前端部署时）  
+46. 自动化测试（pytest + httpx + test DB fixture）  
+47. LLM-as-Judge 评估摘要质量（Week 3+）
+
+### 时间统计
+
+- **18:35–19:30**：A 阶段（后端 events API 设计 + 实现 + 测试）**约 55min**
+- **19:30–19:45**：B 阶段（极简前端）**约 15min**
+- **19:45–20:00**：前端浏览器验证 + 截图决策 **约 15min**
+- **20:00–20:42**：C 阶段（CLI search 设计 + 实现 + 跨语言验证）**约 42min**
+- **20:42–21:10**：D 阶段（RSS 源调研 + 扩展 + 端到端重跑）**约 28min**
+- **21:10–21:25**：E 阶段（`sources_count` 同步 + commit）**约 15min**
+- **总计约 2h50min**
+
+### 当前 Day 8 累计进度
+
+- A 阶段（events API）：✅ `GET /api/v1/events/today` 端到端跑通  
+- B 阶段（极简前端）：✅ 本地浏览器渲染 Top 15  
+- C 阶段（CLI search）：✅ 跨语言 **9/10** 召回率  
+- D 阶段（RSS 扩源）：✅ **86** 条新数据，**+1** 个新事件  
+- E 阶段（`sources_count`）：✅ 用户能看到「虚假多样性」  
+- commit + push：✅ **`e18203a`** + **`e9725694`** + **`0aea5c7`**
+
+**后续（Day 9+ TODO）**：
+
+- 部署到云端（Railway / Fly.io）  
+- RSS 去重（跨日重发修复）  
+- 时间窗口聚类（彻底解决工程问题 32）  
+- 写自动化测试  
+- 多视角展示（一个事件不同媒体怎么说）
