@@ -1258,3 +1258,272 @@ pytest -m "not integration"
 - 时间窗口聚类（彻底解决工程问题 32）  
 - 写自动化测试  
 - 多视角展示（一个事件不同媒体怎么说）
+
+---
+
+## Day 9 - 2026-05-25 (RSS 去重 + 时间窗口聚类 + CLI 完善 + 测试覆盖)
+
+### 完成内容
+
+#### A 阶段：RSS 跨日重发去重（工程问题 34 修复，~1.5h）
+
+- **alembic** 迁移 `a1b2c3d4e5f6`：`news` 表加 `title_fuzzy_hash` `VARCHAR(64)` nullable
+- **`apps/api/src/ingestion/deduplicator.py`** 改造（**+~150** 行）：
+  - `_normalize_title_for_fuzzy`：NFKC + 去日期 + 去标点 + 折叠空白
+  - `_compute_title_fuzzy_hash`：短标题 **< 8** 字符跳过，否则 sha256
+  - `_PreparedRow` 加 `title_fuzzy_hash` 字段
+  - `_filter_for_insert` 顺序：**url → title_fuzzy → content → insert**
+  - `_fetch_existing_title_fuzzy_keys`（`tuple_` IN 复合查询）
+  - `InsertStats` 加 `skipped_title_fuzzy_dup`
+- **`apps/api/src/models/news.py`** 加 `title_fuzzy_hash` 字段
+- **`scripts/seed_news.py`** 同步算 `title_fuzzy_hash`
+- **关键设计**：
+  - 方案 C（normalize + SHA256），不用 simhash（避免新依赖）
+  - `(source_name, title_fuzzy_hash)` 复合 key（保留多源视角）
+  - `MIN_TITLE_FUZZY_LEN = 8`（短标题不参与，防误伤）
+  - `nullable=True`（老数据保持 NULL，不回填）
+- **实测验证**：
+  - **7/7** sources success（BBC 神奇恢复）
+  - **126** 条新数据入库，全部有 `title_fuzzy_hash`
+  - 老数据 **622** 条保持 NULL（设计行为）
+  - `skipped_title_fuzzy_dup=0`（这次没碰到重复，修复对未来生效）
+- commit：**`704ce8a`**
+
+#### B 阶段：时间窗口聚类（工程问题 32 部分修复，~1.5h）
+
+- Day 9 端到端 pipeline 跑出 **Cluster 11**（**26** 条）HN 杂烩：
+  - Getting arrested in Japan
+  - Rust but Lisp
+  - I caught the car
+  - 全跨多周，文风相似聚成超级簇
+- **设计选择**：
+  - 方案 A（**ISO 自然周**，UTC）不是滚动窗口 / 动态分位数 / 按日
+  - 严格分桶（跨周事件分裂成 **2** 个 Event，接受）
+  - 不加 env 回滚开关（固定行为，简化）
+  - 不改 `cluster_method` 字段（向后兼容）
+- **`scripts/cluster_news.py`** 改造（**+174** 行）：
+  - `WindowClusterResult` / `window_stats` 数据结构
+  - `_iso_week_key`（UTC，格式 `"2026-W21"`）
+  - `_load_published_at_by_news_ids`（批量查 PG）
+  - `_bucket_records_by_iso_week`（含 unknown 桶兜底）
+  - `cluster_by_iso_week`（每窗独立 HDBSCAN）
+  - `print_window_summary`（表格输出）
+  - `persist_clusters_to_db` 按 `window_key` 循环
+- **分桶结果**：
+  - `2025-W23` **96** points **4** clusters **61.5%** noise
+  - `2026-W18` **1** point **0** clusters **100%** skip
+  - `2026-W19` **371** points **11** clusters **52.0%** noise
+  - `2026-W20` **9** points **0** clusters **100%** noise
+  - `2026-W21` **214** points **8** clusters **69.2%** noise
+  - `2026-W22` **57** points **2** clusters **64.9%** noise
+- **对比**：
+  - 周聚类前：**22** clusters / **63.4%** noise / Cluster 11 HN 杂烩存在
+  - 周聚类后：**11** clusters 报告（写库后 **25** events）
+  - Cluster 11 杂烩消失 ✅
+- **events 表变化**：
+  - 周聚类前：**18** events
+  - 周聚类后：**25** events（**+7**）
+- **新 Top 15 事件**（Day 9 独有）：
+  - **#3** Rosenberg: Luhansk strike（Russia/Ukraine）
+  - **#5** TomTom 中国订单暴涨 10 倍（36氪）
+  - **#9** At least 131 dead in Ebola（国际公卫）
+  - **#13** AI eats the world Spring 2026（HN）
+  - **#14** Memorial Day sales（美国）
+  - **#15** Trump warns 'clock is ticking'
+- **LLM 成本**：**25 + 25 = 50** 次，约 **¥0.025**
+- **重要踩坑**：
+  - `docker exec` env 不透传（host `CLUSTER_WRITE_TO_DB=true` 无效）
+  - 必须用 `docker compose exec -e CLUSTER_WRITE_TO_DB=true api ...`
+  - 第一次跑没写库，排查后第二次成功
+- commit：**`2c3453f`**
+
+#### C 阶段：CLI show + today --limit（~1h）
+
+- 落实 Day 8 TODO **41**、**42**
+- **`scripts/cli.py`** **+243** 行：
+  - `cmd_show`：单事件详情视图
+  - **7** 个 helper 函数
+  - UUID 前缀匹配（`cast(Event.id, String).like('hex%')`）
+  - `--news-limit` 默认 **5**，范围 **1–20**
+  - `today` 加 `--limit` 默认 **15**，范围 **1–50**
+  - 复用 `utils/display` **3** 函数
+  - 显示 ISO 周键（from `first_seen_at`）
+- **实测**：
+  - `giim today --limit 5` → 正确显示 **5** 条
+  - `giim show 62c669d5` → 完整详情 + **5** 条原始新闻
+  - `giim show f37fb79f --news-limit 10` → **10** 条
+- ⭐⭐⭐ **重大发现**（见工程问题 **38**）
+- commit：**`d3eb849`**
+
+#### D 阶段：工程问题 38 发现 — 代表标题 vs 摘要语义错位 ⭐⭐⭐（核心简历素材）
+
+- 通过 `giim show f37fb79f` 暴露：
+  - **代表标题**：「Rosenberg: Luhansk strike sparks Russian accusations」
+  - **LLM 摘要**：白宫开枪 + 马尼拉建筑倒塌 + 中国煤矿瓦斯
+  - **原始 7 条**：**4** 条灾难 + **1** 条 Luhansk + **2** 条其他突发
+- **根因分析**：
+  - 簇内 **7** 条都是「BBC 突发灾难」主题
+  - LLM 选代表标题（**1** 个标题）：倾向独特性 → 选了 Luhansk
+  - LLM 摘要（整簇汇总）：总结多数主题 → 选了灾难三连
+  - **两次独立 LLM 调用**，优化目标不同，产生不一致
+- **简历金句**：
+  - 「Day 9 `cli show` 暴露 RAG 系统的代表标题 vs 摘要语义错位：两次 LLM 调用优化目标不同，选标题倾向独特性，摘要总结多数主题。用户看 `today` Top 列表标题 vs 点 `show` 详情看摘要，产生体验断层。这是 production ML 系统的隐藏 UX 问题，不是聚类质量问题。」
+
+#### E 阶段：pytest 自动化测试（~1.5h，含修 bug）
+
+- **现状**：项目已有 pytest 配置（`pyproject` + `tests/conftest` `async_client` + `test_health`）
+- **设计选择**：
+  - 测试 DB：选项 B（`giim_test` 独立库）
+  - fixture **savepoint** 模式（外层事务 + commit savepoint + rollback）
+  - 复用根目录 `tests/`，不迁移 `apps/api/tests/`
+- **新文件**（**4** 个）：
+  - `tests/conftest.py` 扩展（**~172** 行）
+  - `tests/test_events_router.py`（**~77** 行，**4** case）
+  - `tests/test_utils_display.py`（**~31** 行，**3** case）
+  - `tests/test_deduplicator.py`（**~56** 行，**2** case）
+- **测试结果**：**5 passed + 4 xfailed**
+  - ✅ `test_stars_for_score`（**10** 个边界 case）
+  - ✅ `test_event_type_label`（**4** case）
+  - ✅ `test_duration_str`（**3** case）
+  - ✅ `test_today_endpoint_limit_out_of_range_422`
+  - ✅ `test_title_fuzzy_dup_skipped`（集成测试）
+  - ⚠️ `test_today_endpoint_default_limit_15`（fixture 架构 bug）
+  - ⚠️ `test_today_endpoint_custom_limit`（asyncpg event loop scope）
+  - ⚠️ `test_today_endpoint_no_scored_events_returns_200`（同上）
+  - ⚠️ `test_cross_source_title_kept`（asyncpg event loop scope）
+- **xfail 4 个的根因**：
+  - lifespan engine（`app.state.db_engine`）跟 test `db_session` 不共享
+  - pytest-asyncio session-scope engine + asyncpg 跨 loop 不兼容
+  - 修复需重写 lifespan engine override 或迁移到 sync engine
+  - 复杂度高，留 **Day 10+**
+- **接受 5/9 = 55% 通过**：
+  - **4** 个通过的是真测试（utils + dedup + 422）
+  - **4** xfail 是 fixture 架构问题，不是业务代码 bug
+  - production engineer 习惯：标记 xfail + reason，不假装绿
+- commit：**`4ead816`**
+
+### Day 9 工程问题
+
+#### 工程问题 38：代表标题 vs LLM 摘要语义错位（核心 ⭐⭐⭐）
+
+- **现象**：`cli show` 单事件详情发现
+  - 代表标题（LLM 选）：Luhansk 战事
+  - LLM 摘要（LLM 汇总）：白宫开枪 + 马尼拉建筑 + 中国煤矿
+  - 完全不一致，但都不是「幻觉」
+- **根因**：
+  - 两次独立 LLM 调用，各自优化目标不同
+  - 选标题：倾向高词汇 / 独特性（单条标题）
+  - 摘要：总结多数主题（整簇汇总）
+  - 簇内 **7** 条都是 BBC 突发灾难，Luhansk 是少数派
+- **影响**：
+  - 用户看 `today` Top 列表标题 → 点 `show` 详情看摘要 → 感知断层
+  - Day 7 工程问题 **32** 是「聚类质量」
+  - 工程问题 **38** 是「LLM 调用一致性」
+- **解决方案**（Day 10+）：
+  - A. LLM 选代表标题时，让它「代表整簇语义」（改 prompt）
+  - B. LLM 摘要时，强制以「代表标题」为主线
+  - C. 两次合并为一次 LLM 调用（输入全簇 → 输出 title + summary）
+- **反思**：
+  - 跨 LLM 调用一致性是 production ML 系统的隐藏问题
+  - 单元测试和评分都对的事情，仍可能 UX 差
+  - `cli show` 比 `cli today` 更能暴露问题（详细视图 > 列表）
+
+#### 工程问题 39：docker exec env 不透传 host 变量
+
+- **现象**：`CLUSTER_WRITE_TO_DB=true docker compose exec api python -m scripts.cluster_news` 没生效，cluster 没写库，`events` 表保持 **18** 个
+- **根因**：
+  - `CLUSTER_WRITE_TO_DB=true` 设给 host shell，不是 `docker exec`
+  - 容器内 `os.getenv` 仍是 None / `"false"`
+- **修复**：
+  - `docker compose exec -e CLUSTER_WRITE_TO_DB=true api python ...`
+  - `-e` 显式透传 env 给容器
+- **反思**：
+  - 本地 dev 跑命令习惯 host env，但 `docker compose exec` 不同
+  - 文档 README 应明确写出 `-e` 用法
+
+#### 工程问题 40：pytest-asyncio + asyncpg session scope event loop 不兼容
+
+- **现象**：`test_today_endpoint_custom_limit` 等 **4** 个测试报「Task ... got Future ... attached to a different loop」
+- **根因**：
+  - asyncpg connection 是 loop-affined
+  - pytest-asyncio function-scope test 创建新 loop
+  - session-scope engine + function-scope test = engine 用旧 loop
+- **解决方案**（Day 10+ 探索）：
+  - 把 `test_engine` 改为 function scope（但慢）
+  - 用 `NullPool` 避免连接复用
+  - 或迁移到 sync engine + sync test
+- **反思**：
+  - async pytest fixture 是个深坑，跨 loop 是经典 bug
+  - 简历可写：「尝试 asyncpg pytest fixture，卡 event loop scope，标记 xfail + 注释」
+
+#### 工程问题 41：docker run alembic 升级单库，不影响 test DB
+
+- **现象**：创建 `giim_test` 后，默认 `alembic upgrade` 跑的是 `giim`
+- **修复**：
+  - `docker compose exec -e DATABASE_URL=postgresql+asyncpg://giim:giim@postgres:5432/giim_test api alembic upgrade head`
+  - 每次新增 alembic 迁移，两个库都要 upgrade
+- **反思**：
+  - 多库管理在 production CI 是常见模式
+  - 应该写 `scripts/setup_test_db.sh` 自动化
+
+### 关键技术决策
+
+1. **RSS 去重**：normalize + SHA256，不用 simhash — 避免新依赖，简单可解释，Day 8 重复对就是逐字相同
+2. **复合 key `(source_name, title_fuzzy_hash)`** — 保留多源视角（不跨源去重通稿）
+3. **`nullable=True` 不回填存量** — 不破坏 `event_news` 外键，新数据强制有值，修复对未来生效
+4. **ISO 自然周分桶（UTC）**，不是滚动窗口 — 可解释，与「本周新闻」心智一致，实现简单
+5. **跨周事件接受分裂**（**1** 簇 → **2** 个 Event）— 优于「**1** 个 Event 混 **26** 条无关帖」；长期叙事用 `event_type=recurring` 表达（Day 10+）
+6. **UUID 前缀匹配**（`cli show`）— 用户不用复制完整 **36** 字符 UUID；`cast(Event.id, String).like('prefix%')`
+7. **pytest 5/9 通过 + 4 xfail 标记** — 拒绝「假装绿色」，明确标记 fixture 架构待修；production engineer 习惯：xfail + reason
+8. **工程问题 38 不今晚修** — 范围控制，留 Day 10+ 重新设计 LLM prompt
+
+### TODO（技术债）
+
+[继承自 Day 5–8]
+
+- 略（见前几日 dev-log 既有条目）。
+
+[Day 9 新增 — 工程问题 38–41]
+
+48. fixture 架构修复：lifespan engine + test `db_session` 共享，修 **4** 个 xfail  
+49. `cli show` 暴露的代表标题 vs 摘要错位 — 改 LLM prompt 或合并 **2** 次调用  
+50. `setup_test_db.sh` 自动化（CREATE DATABASE + alembic upgrade）  
+51. README 加 `docker compose exec -e` 用法说明  
+52. `event_type=recurring` 类型（近期活跃的长期话题，Day 7 TODO）  
+53. `cluster_id` 持久化到 `EventNews.raw_metadata`（用于 `cli show` 显示）  
+54. asyncpg event loop scope 探索（function-scope engine + NullPool?）  
+55. 长期话题跨周 Event 合并层（SimHash 标题相似度 + 时间邻近）
+
+### 时间统计
+
+- **17:00–18:05**：Phase 1 准备（Day 8 dev-log 补完，push）**~1h**
+- **18:10–18:55**：Phase 1 RSS 去重（设计 + 实现 + 测试 + commit）**~45min**
+- **19:00–20:30**：Phase 2 时间窗口聚类（设计 + 实现 + 写库测试）**~1.5h**
+- **19:25–19:45**：Phase 3 CLI show + today --limit **~20min**
+- **19:45–20:30**：Phase 4 测试设计 + 写代码 **~45min**
+- **20:30–20:45**：Phase 5 修 xfail + commit **~15min**
+- **总计约 4h**
+
+（注：Phase 编号与上面 A–E 阶段不完全对应，因为部分 Phase 并行）
+
+### 当前 Day 9 累计进度
+
+- A 阶段（RSS 去重 工程问题 34）：✅ **7/7** sources，**126** 新数据
+- B 阶段（时间窗口聚类 工程问题 32 部分）：✅ Cluster 11 杂烩消失
+- C 阶段（CLI show + today --limit）：✅ 单事件详情 + 灵活 limit
+- D 阶段（发现工程问题 38）：⭐⭐⭐ 简历金句
+- E 阶段（pytest 5/9 通过）：✅ 自动化测试基础设施
+
+**4** 个 commit：
+
+- **`704ce8a`** feat(day9): RSS 跨日重发去重
+- **`2c3453f`** feat(day9): 时间窗口聚类
+- **`d3eb849`** feat(day9): CLI show + today --limit
+- **`4ead816`** test(day9): pytest async 测试覆盖
+
+**后续（Day 10+ TODO）**：
+
+- 工程问题 **38** 修复（LLM prompt 合并）
+- 工程问题 **40** fixture 架构（**4** xfail 转 pass）
+- 时间窗口长期话题合并
+- 部署到云端（Fly.io / Railway）
