@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import secrets
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, Header, status
 
 from src.core.config import settings
 from src.core.logging import get_logger
@@ -28,18 +28,20 @@ router = APIRouter(prefix="/ingestion", tags=["ingestion"])
     summary="触发一次新闻采集",
     description=(
         "同步执行 RSS 采集 + 去重 + 入库,返回完整统计。"
-        "需要在 query param 中传 token。"
+        "使用 Authorization: Bearer token；仅开发环境兼容 query token。"
     ),
 )
 async def trigger_ingestion(
     request: Request,
-    token: str = Query(..., description="鉴权 token,与环境变量 INGESTION_TRIGGER_TOKEN 比对"),
+    token: str | None = Query(None, deprecated=True),
+    authorization: str | None = Header(None),
 ) -> IngestionRunStats:
     client_host = request.client.host if request.client else None
     logger.info("采集触发开始", client_ip=client_host)
 
     expected = settings.ingestion_trigger_token
-    if not secrets.compare_digest(token.encode("utf-8"), expected.encode("utf-8")):
+    supplied = authorization.removeprefix("Bearer ") if authorization else (token if settings.app_env != "production" else None)
+    if not expected or not supplied or not secrets.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8")):
         logger.warning("采集触发 token 无效", client_ip=client_host)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 

@@ -65,5 +65,5 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_unexpected_exception(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(
             status_code=500,
-            content={"code": "INTERNAL_ERROR", "message": "服务器内部错误", "detail": str(exc)},
+            content={"code": "INTERNAL_ERROR", "message": "服务器内部错误", "detail": "Unexpected error; consult server logs"},
         )

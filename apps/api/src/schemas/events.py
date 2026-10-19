@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EventResponse(BaseModel):
@@ -27,6 +27,13 @@ class EventResponse(BaseModel):
     duration_str: str
     news_count: int
     sources_count: int
+    source_names: list[str] = Field(default_factory=list)
+    languages: list[str] = Field(default_factory=list)
+    summary_kind: str = "legacy_ai"
+    generated_at: str | None = None
+    coverage: dict = Field(default_factory=dict)
+    category: str = "general"
+    why_it_matters: dict | None = None
 
 
 class TodayEventsResponse(BaseModel):
@@ -39,3 +46,6 @@ class TodayEventsResponse(BaseModel):
     total_news: int
     total_sources: int
     generated_at: datetime
+
+    window_hours: int = 24
+    window_start: datetime | None = None

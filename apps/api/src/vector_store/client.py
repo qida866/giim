@@ -127,8 +127,7 @@ class QdrantVectorStore:
 
     async def search(self, request: SearchRequest) -> SearchResponse:
         """语义检索，返回相似点列表。"""
-        if request.filter_conditions is not None:
-            raise NotImplementedError("filter_conditions 待 Day 6+ 实现")
+        query_filter = models.Filter.model_validate(request.filter_conditions) if request.filter_conditions else None
 
         started_at = time.perf_counter()
         client = await self._get_client()
@@ -144,11 +143,12 @@ class QdrantVectorStore:
                 top_k=request.top_k,
             )
 
-        logger.info("qdrant_search_start", top_k=request.top_k, has_filter=False)
+        logger.info("qdrant_search_start", top_k=request.top_k, has_filter=query_filter is not None)
         try:
             response = await client.query_points(
                 collection_name=self._collection_name,
                 query=list(request.query_vector),
+                query_filter=query_filter,
                 limit=request.top_k,
                 score_threshold=request.score_threshold,
                 with_payload=True,
@@ -203,3 +203,9 @@ class QdrantVectorStore:
         except Exception:  # noqa: BLE001 - 健康检查吞掉异常,仅返回布尔值
             return False
         return True
+
+    async def close(self) -> None:
+        """释放异步 HTTP 连接。"""
+        if self._client is not None:
+            await self._client.close()
+            self._client = None

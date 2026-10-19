@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.core.logging import get_logger
 from src.ingestion.orchestrator_schema import (
-    DEFAULT_SOURCES,
     IngestionRunStats,
     SourceRunStats,
 )
@@ -31,7 +30,9 @@ async def run_ingestion(
 ) -> IngestionRunStats:
     """并发拉取多个源,聚合统计。"""
     if sources is None:
-        sources = DEFAULT_SOURCES
+        from src.ingestion.registry import load_registry
+
+        sources = load_registry()
     if session_factory is None:
         from src.db.session import AsyncSessionLocal
 
@@ -39,7 +40,13 @@ async def run_ingestion(
     started_at = datetime.now(timezone.utc)
     run_t0 = time.perf_counter()
     logger.info("采集运行开始", sources_total=len(sources))
-    tasks = [_run_single_source(src, session_factory) for src in sources]
+    semaphore = asyncio.Semaphore(6)
+
+    async def bounded(source: RssSource) -> SourceRunStats:
+        async with semaphore:
+            return await _run_single_source(source, session_factory)
+
+    tasks = [bounded(src) for src in sources]
     raw_results = await asyncio.gather(*tasks, return_exceptions=True)
     per_source: list[SourceRunStats] = []
     for src, res in zip(sources, raw_results, strict=True):
@@ -49,11 +56,16 @@ async def run_ingestion(
             per_source.append(
                 SourceRunStats(
                     source_name=src.name,
+                    source_id=src.source_id,
                     success=False,
-                    fetch_error=str(res),
+                    fetch_error=type(res).__name__,
                     duration_ms=0.0,
                 )
             )
+    from src.ingestion.source_health import save_source_health
+
+    async with session_factory() as state_session:
+        await save_source_health(state_session, per_source)
     finished_at = datetime.now(timezone.utc)
     total_duration_ms = (time.perf_counter() - run_t0) * 1000
     sources_total = len(per_source)
@@ -61,7 +73,9 @@ async def run_ingestion(
     sources_failed = sources_total - sources_succeeded
     items_fetched_total = sum(s.items_fetched for s in per_source)
     items_inserted_total = sum(s.inserted for s in per_source)
-    items_skipped_total = sum(s.skipped_url_dup + s.skipped_content_dup for s in per_source)
+    items_skipped_total = sum(
+        s.skipped_url_dup + s.skipped_content_dup + s.skipped_title_fuzzy_dup for s in per_source
+    )
     items_failed_total = sum(s.failed for s in per_source)
     logger.info(
         "采集运行结束",

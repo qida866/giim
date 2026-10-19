@@ -175,6 +175,9 @@ async def fetch_source_names_for_event(session: AsyncSession, event_id: uuid.UUI
 
 
 async def main() -> int:
+    from scripts.legacy_guard import allow_legacy_mutation
+    if not allow_legacy_mutation():
+        return 2
     """执行影响力评分主流程, 返回进程退出码 (0 成功, 1 提交失败)。"""
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(Event).order_by(Event.news_count.desc()))

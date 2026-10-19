@@ -28,7 +28,8 @@ class News(Base):
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     title_fuzzy_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="en")
-    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    time_quality: Mapped[str] = mapped_column(String(20), nullable=False, server_default="legacy", default="verified")
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -47,6 +48,7 @@ class News(Base):
         onupdate=func.now(),
     )
     __table_args__ = (
+        Index("ix_news_source_title_fuzzy", "source_name", "title_fuzzy_hash"),
         Index("ix_news_published_at_desc_language", published_at.desc(), language),
     )
 

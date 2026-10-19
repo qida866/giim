@@ -46,7 +46,7 @@ class EmbeddingClient:
 
         try:
             texts = self._validate_texts(request.texts)
-            self._ensure_model_loaded()
+            await asyncio.to_thread(self._ensure_model_loaded)
 
             total_chars = sum(len(text) for text in texts)
             logger.info(
@@ -151,12 +151,13 @@ class EmbeddingClient:
         if self._model is None:
             raise RuntimeError("模型尚未加载，无法执行 encode")
 
-        vectors = self._model.encode(
-            texts,
-            normalize_embeddings=normalize,
-            convert_to_numpy=True,
-            show_progress_bar=False,
-        )
+        with self._model_lock:
+            vectors = self._model.encode(
+                texts,
+                normalize_embeddings=normalize,
+                convert_to_numpy=True,
+                show_progress_bar=False,
+            )
         return vectors.tolist()
 
     @staticmethod

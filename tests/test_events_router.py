@@ -14,9 +14,6 @@ from src.models.event import Event
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.mark.xfail(
-    reason="fixture 架构: lifespan engine 与 test db_session 不一致, 见 TODO 48",
-)
 async def test_today_endpoint_default_limit_15(
     async_client_db: AsyncClient,
     sample_events: list[Event],
@@ -32,9 +29,6 @@ async def test_today_endpoint_default_limit_15(
     assert scores == sorted(scores, reverse=True)
 
 
-@pytest.mark.xfail(
-    reason="fixture 架构: asyncpg event loop scope 不一致, 见 TODO 48",
-)
 async def test_today_endpoint_custom_limit(
     async_client_db: AsyncClient,
     sample_events: list[Event],
@@ -59,9 +53,6 @@ async def test_today_endpoint_limit_out_of_range_422(
         assert response.status_code == 422
 
 
-@pytest.mark.xfail(
-    reason="fixture 架构: asyncpg event loop scope 不一致, 见 TODO 48",
-)
 async def test_today_endpoint_no_scored_events_returns_200(
     async_client_db: AsyncClient,
     db_session: AsyncSession,

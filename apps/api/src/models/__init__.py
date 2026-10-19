@@ -13,3 +13,7 @@ __all__ = [
     "EventEntity",
     "Briefing",
 ]
+
+from src.models.operations import OperationalState
+
+from src.models.event_revision import EventRevision

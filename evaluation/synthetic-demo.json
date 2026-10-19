@@ -1,0 +1,65 @@
+{
+  "methodology": "Authored fictional smoke-test examples; not the historical Phase 3 benchmark and not a global quality estimate.",
+  "articles": [
+    {
+      "id": 10000,
+      "title": "Luma Observatory launches Aurora telescope",
+      "content": "Luma Observatory launched the Aurora telescope on Monday to study distant galaxies.",
+      "language": "en",
+      "publisher": "Synthetic publisher 0",
+      "url": "https://example.invalid/evaluation/0",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "telescope"
+    },
+    {
+      "id": 10001,
+      "title": "露玛天文台发射极光望远镜",
+      "content": "露玛天文台周一发射了极光望远镜，用于研究遥远星系。",
+      "language": "zh",
+      "publisher": "Synthetic publisher 1",
+      "url": "https://example.invalid/evaluation/1",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "telescope"
+    },
+    {
+      "id": 10002,
+      "title": "El observatorio Luma lanza el telescopio Aurora",
+      "content": "El observatorio Luma lanzó el telescopio Aurora el lunes para estudiar galaxias lejanas.",
+      "language": "es",
+      "publisher": "Synthetic publisher 2",
+      "url": "https://example.invalid/evaluation/2",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "telescope"
+    },
+    {
+      "id": 10003,
+      "title": "Flood closes Maren bridge",
+      "content": "Flooding closed the Maren bridge on Monday. Local buses were diverted.",
+      "language": "en",
+      "publisher": "Synthetic publisher 3",
+      "url": "https://example.invalid/evaluation/3",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "bridge"
+    },
+    {
+      "id": 10004,
+      "title": "洪水导致马伦大桥关闭",
+      "content": "洪水导致马伦大桥周一关闭，当地公交车改道。",
+      "language": "zh",
+      "publisher": "Synthetic publisher 4",
+      "url": "https://example.invalid/evaluation/4",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "bridge"
+    },
+    {
+      "id": 10005,
+      "title": "Riverton council approves library",
+      "content": "The Riverton council approved construction of a public library on Monday.",
+      "language": "en",
+      "publisher": "Synthetic publisher 5",
+      "url": "https://example.invalid/evaluation/5",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "event_label": "library"
+    }
+  ]
+}

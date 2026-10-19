@@ -1,0 +1,1311 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "source_id": "bbc",
+      "name": "BBC News - World",
+      "publisher_id": "bbc",
+      "ownership_group": "bbc",
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "language": "en",
+      "country": "GB",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "validated_at": "2026-09-22T01:59:02.277812+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "npr",
+      "name": "NPR",
+      "publisher_id": "npr",
+      "ownership_group": "npr",
+      "url": "https://feeds.npr.org/1004/rss.xml",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://feeds.npr.org/1004/rss.xml",
+      "validated_at": "2026-09-22T01:59:02.302757+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "cbc",
+      "name": "CBC",
+      "publisher_id": "cbc",
+      "ownership_group": "cbc",
+      "url": "https://www.cbc.ca/webfeed/rss/rss-world",
+      "language": "en",
+      "country": "CA",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.cbc.ca/webfeed/rss/rss-world",
+      "validated_at": "2026-09-22T01:59:02.311015+00:00",
+      "disabled_reason": "ReadTimeout",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "pbs",
+      "name": "PBS",
+      "publisher_id": "pbs",
+      "ownership_group": "pbs",
+      "url": "https://www.pbs.org/newshour/feeds/rss/world",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.pbs.org/newshour/feeds/rss/world",
+      "validated_at": "2026-09-22T01:59:02.319335+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "guardian",
+      "name": "The Guardian",
+      "publisher_id": "guardian",
+      "ownership_group": "guardian",
+      "url": "https://www.theguardian.com/world/rss",
+      "language": "en",
+      "country": "GB",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.theguardian.com/help/feeds",
+      "validated_at": "2026-09-22T01:59:02.327595+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official RSS documentation specifies personal non-commercial use. Enabled for local review; production disabled pending appropriate permission. https://www.theguardian.com/help/feeds",
+      "production_enabled": false
+    },
+    {
+      "source_id": "dw-en",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-en-all",
+      "language": "en",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-en-all",
+      "validated_at": "2026-09-22T01:59:02.335672+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dw-zh",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-chi-all",
+      "language": "zh",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-chi-all",
+      "validated_at": "2026-09-22T01:59:02.801392+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dw-de",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-de-all",
+      "language": "de",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-de-all",
+      "validated_at": "2026-09-22T01:59:02.816590+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dw-es",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-sp-all",
+      "language": "es",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-sp-all",
+      "validated_at": "2026-09-22T01:59:02.875519+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dw-ar",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-ar-all",
+      "language": "ar",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-ar-all",
+      "validated_at": "2026-09-22T01:59:02.928535+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dw-ru",
+      "name": "DW",
+      "publisher_id": "dw",
+      "ownership_group": "dw",
+      "url": "https://rss.dw.com/rdf/rss-ru-all",
+      "language": "ru",
+      "country": "DE",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rss.dw.com/rdf/rss-ru-all",
+      "validated_at": "2026-09-22T01:59:03.001774+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "f24-en",
+      "name": "France 24",
+      "publisher_id": "france24",
+      "ownership_group": "france24",
+      "url": "https://www.france24.com/en/rss",
+      "language": "en",
+      "country": "FR",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.france24.com/en/rss",
+      "validated_at": "2026-09-22T01:59:03.258893+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "f24-fr",
+      "name": "France 24",
+      "publisher_id": "france24",
+      "ownership_group": "france24",
+      "url": "https://www.france24.com/fr/rss",
+      "language": "fr",
+      "country": "FR",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.france24.com/fr/rss",
+      "validated_at": "2026-09-22T01:59:03.393936+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "f24-es",
+      "name": "France 24",
+      "publisher_id": "france24",
+      "ownership_group": "france24",
+      "url": "https://www.france24.com/es/rss",
+      "language": "es",
+      "country": "FR",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.france24.com/es/rss",
+      "validated_at": "2026-09-22T01:59:03.513527+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "f24-ar",
+      "name": "France 24",
+      "publisher_id": "france24",
+      "ownership_group": "france24",
+      "url": "https://www.france24.com/ar/rss",
+      "language": "ar",
+      "country": "FR",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.france24.com/ar/rss",
+      "validated_at": "2026-09-22T01:59:03.537281+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "nhk",
+      "name": "NHK",
+      "publisher_id": "nhk",
+      "ownership_group": "nhk",
+      "url": "https://www3.nhk.or.jp/rss/news/cat0.xml",
+      "language": "ja",
+      "country": "JP",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www3.nhk.or.jp/rss/news/cat0.xml",
+      "validated_at": "2026-09-22T01:59:03.677392+00:00",
+      "disabled_reason": "stale publication dates at validation",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "yonhap-en",
+      "name": "Yonhap",
+      "publisher_id": "yonhap",
+      "ownership_group": "yonhap",
+      "url": "https://en.yna.co.kr/RSS/news.xml",
+      "language": "en",
+      "country": "KR",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://en.yna.co.kr/RSS/news.xml",
+      "validated_at": "2026-09-22T01:59:03.926436+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "yonhap-ko",
+      "name": "Yonhap",
+      "publisher_id": "yonhap",
+      "ownership_group": "yonhap",
+      "url": "https://www.yna.co.kr/rss/news.xml",
+      "language": "ko",
+      "country": "KR",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.yna.co.kr/rss/news.xml",
+      "validated_at": "2026-09-22T01:59:03.950625+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "rthk-zh",
+      "name": "RTHK",
+      "publisher_id": "rthk",
+      "ownership_group": "rthk",
+      "url": "https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml",
+      "language": "zh",
+      "country": "HK",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml",
+      "validated_at": "2026-09-22T01:59:03.967097+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "rthk-en",
+      "name": "RTHK",
+      "publisher_id": "rthk",
+      "ownership_group": "rthk",
+      "url": "https://rthk.hk/rthk/news/rss/e_expressnews_einternational.xml",
+      "language": "en",
+      "country": "HK",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://rthk.hk/rthk/news/rss/e_expressnews_einternational.xml",
+      "validated_at": "2026-09-22T01:59:03.989317+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "cna",
+      "name": "CNA",
+      "publisher_id": "cna",
+      "ownership_group": "cna",
+      "url": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml",
+      "language": "en",
+      "country": "SG",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml",
+      "validated_at": "2026-09-22T01:59:04.185713+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Publisher RSS terms limit use to personal non-commercial use: https://www.channelnewsasia.com/rss/rssterms ; disabled for production unless separately authorized.",
+      "production_enabled": false
+    },
+    {
+      "source_id": "hindu",
+      "name": "The Hindu",
+      "publisher_id": "hindu",
+      "ownership_group": "hindu",
+      "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+      "language": "en",
+      "country": "IN",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.thehindu.com/news/international/feeder/default.rss",
+      "validated_at": "2026-09-22T01:59:04.771077+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "indianexpress",
+      "name": "The Indian Express",
+      "publisher_id": "indianexpress",
+      "ownership_group": "indianexpress",
+      "url": "https://indianexpress.com/section/world/feed/",
+      "language": "en",
+      "country": "IN",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://indianexpress.com/section/world/feed/",
+      "validated_at": "2026-09-22T01:59:05.308623+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "dawn",
+      "name": "Dawn",
+      "publisher_id": "dawn",
+      "ownership_group": "dawn",
+      "url": "https://www.dawn.com/feeds/home",
+      "language": "en",
+      "country": "PK",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.dawn.com/feeds/home",
+      "validated_at": "2026-09-22T01:59:05.692392+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "bangkokpost",
+      "name": "Bangkok Post",
+      "publisher_id": "bangkokpost",
+      "ownership_group": "bangkokpost",
+      "url": "https://www.bangkokpost.com/rss/data/topstories.xml",
+      "language": "en",
+      "country": "TH",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.bangkokpost.com/rss/data/topstories.xml",
+      "validated_at": "2026-09-22T01:59:05.793164+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "rnz",
+      "name": "RNZ",
+      "publisher_id": "rnz",
+      "ownership_group": "rnz",
+      "url": "https://www.rnz.co.nz/rss/world.xml",
+      "language": "en",
+      "country": "NZ",
+      "region": "Oceania",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.rnz.co.nz/rss/world.xml",
+      "validated_at": "2026-09-22T01:59:05.839685+00:00",
+      "disabled_reason": "HTTPStatusError",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "africanews",
+      "name": "Africanews",
+      "publisher_id": "africanews",
+      "ownership_group": "euronews",
+      "url": "https://www.africanews.com/feed/rss",
+      "language": "en",
+      "country": "CG",
+      "region": "Africa",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.africanews.com/feed/rss",
+      "validated_at": "2026-09-22T01:59:05.969919+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "maverick",
+      "name": "Daily Maverick",
+      "publisher_id": "maverick",
+      "ownership_group": "maverick",
+      "url": "https://www.dailymaverick.co.za/dmrss",
+      "language": "en",
+      "country": "ZA",
+      "region": "Africa",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.dailymaverick.co.za/dmrss",
+      "validated_at": "2026-09-22T01:59:06.272246+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "aj",
+      "name": "Al Jazeera",
+      "publisher_id": "aj",
+      "ownership_group": "aj",
+      "url": "https://www.aljazeera.com/xml/rss/all.xml",
+      "language": "en",
+      "country": "QA",
+      "region": "Middle East",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.aljazeera.com/xml/rss/all.xml",
+      "validated_at": "2026-09-22T01:59:06.928101+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "brazil",
+      "name": "Agência Brasil",
+      "publisher_id": "brazil",
+      "ownership_group": "brazil",
+      "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml",
+      "language": "pt",
+      "country": "BR",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml",
+      "validated_at": "2026-09-22T01:59:07.215071+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "mercopress",
+      "name": "MercoPress",
+      "publisher_id": "mercopress",
+      "ownership_group": "mercopress",
+      "url": "https://en.mercopress.com/rss",
+      "language": "en",
+      "country": "UY",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://en.mercopress.com/rss",
+      "validated_at": "2026-09-22T01:59:07.364648+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "tass",
+      "name": "TASS",
+      "publisher_id": "tass",
+      "ownership_group": "tass",
+      "url": "https://tass.ru/rss/v2.xml",
+      "language": "ru",
+      "country": "RU",
+      "region": "Eastern Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://tass.ru/rss/v2.xml",
+      "validated_at": "2026-09-22T01:59:07.406147+00:00",
+      "disabled_reason": "ConnectError",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "kyivindependent",
+      "name": "The Kyiv Independent",
+      "publisher_id": "kyivindependent",
+      "ownership_group": "kyivindependent",
+      "url": "https://kyivindependent.com/feed/",
+      "language": "en",
+      "country": "UA",
+      "region": "Eastern Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://kyivindependent.com/feed/",
+      "validated_at": "2026-09-22T01:59:07.786996+00:00",
+      "disabled_reason": "HTTPStatusError",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "gdacs",
+      "name": "GDACS",
+      "publisher_id": "gdacs",
+      "ownership_group": "gdacs",
+      "url": "https://www.gdacs.org/xml/rss.xml",
+      "language": "en",
+      "country": "UN",
+      "region": "Global",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "geopolitics",
+        "humanitarian",
+        "disasters"
+      ],
+      "source_type": "rss",
+      "role": "official",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.gdacs.org/xml/rss.xml",
+      "validated_at": "2026-09-22T01:59:08.018874+00:00",
+      "disabled_reason": "reserved independent disaster reference; not mixed into publisher counts",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "who",
+      "name": "WHO",
+      "publisher_id": "who",
+      "ownership_group": "who",
+      "url": "https://www.who.int/rss-feeds/news-english.xml",
+      "language": "en",
+      "country": "UN",
+      "region": "Global",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "official",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.who.int/rss-feeds/news-english.xml",
+      "validated_at": "2026-09-22T01:59:08.225624+00:00",
+      "disabled_reason": "stale publication dates at validation",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "nasa",
+      "name": "NASA",
+      "publisher_id": "nasa",
+      "ownership_group": "nasa",
+      "url": "https://www.nasa.gov/feed/",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "science",
+        "technology"
+      ],
+      "source_type": "rss",
+      "role": "official",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.nasa.gov/feed/",
+      "validated_at": "2026-09-22T01:59:08.422618+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "un",
+      "name": "UN News",
+      "publisher_id": "un",
+      "ownership_group": "un",
+      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+      "language": "en",
+      "country": "UN",
+      "region": "Global",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "geopolitics",
+        "humanitarian",
+        "disasters"
+      ],
+      "source_type": "rss",
+      "role": "official",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+      "validated_at": "2026-09-22T01:59:08.483755+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "sbs",
+      "name": "SBS",
+      "publisher_id": "sbs",
+      "ownership_group": "sbs",
+      "url": "https://www.sbs.com.au/news/topic/latest/feed",
+      "language": "en",
+      "country": "AU",
+      "region": "Oceania",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.sbs.com.au/news/topic/latest/feed",
+      "validated_at": "2026-09-22T02:59:57.628942+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "mainichi-en",
+      "name": "Mainichi",
+      "publisher_id": "mainichi",
+      "ownership_group": "mainichi",
+      "url": "https://mainichi.jp/rss/etc/english_latest.rss",
+      "language": "en",
+      "country": "JP",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://mainichi.jp/rss/etc/english_latest.rss",
+      "validated_at": "2026-09-22T02:59:57.654157+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "mainichi-ja",
+      "name": "Mainichi",
+      "publisher_id": "mainichi",
+      "ownership_group": "mainichi",
+      "url": "https://mainichi.jp/rss/etc/mainichi-flash.rss",
+      "language": "ja",
+      "country": "JP",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://mainichi.jp/rss/etc/mainichi-flash.rss",
+      "validated_at": "2026-09-22T02:59:57.662419+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "meduza",
+      "name": "Meduza",
+      "publisher_id": "meduza",
+      "ownership_group": "meduza",
+      "url": "https://meduza.io/rss/all",
+      "language": "ru",
+      "country": "LV",
+      "region": "Eastern Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://meduza.io/rss/all",
+      "validated_at": "2026-09-22T02:59:57.670567+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication. Russian-language publisher based in Latvia; not a Russia-based reporting organization."
+    },
+    {
+      "source_id": "infobae",
+      "name": "Infobae",
+      "publisher_id": "infobae",
+      "ownership_group": "infobae",
+      "url": "https://www.infobae.com/feeds/rss/",
+      "language": "es",
+      "country": "AR",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.infobae.com/feeds/rss/",
+      "validated_at": "2026-09-22T02:59:57.678657+00:00",
+      "disabled_reason": "HTTPStatusError",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "scmp",
+      "name": "South China Morning Post",
+      "publisher_id": "scmp",
+      "ownership_group": "scmp",
+      "url": "https://www.scmp.com/rss/91/feed",
+      "language": "en",
+      "country": "HK",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.scmp.com/rss/91/feed",
+      "validated_at": "2026-09-22T02:59:57.686779+00:00",
+      "disabled_reason": "",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "chinadaily",
+      "name": "China Daily",
+      "publisher_id": "chinadaily",
+      "ownership_group": "chinadaily",
+      "url": "https://www.chinadaily.com.cn/rss/world_rss.xml",
+      "language": "en",
+      "country": "CN",
+      "region": "Asia-Pacific",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "general"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": false,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.chinadaily.com.cn/rss/world_rss.xml",
+      "validated_at": "2026-09-22T02:59:57.861948+00:00",
+      "disabled_reason": "HTTPStatusError",
+      "usage_notes": "Official public feed fetched directly. Use attributed links and short evidence excerpts; redistribution rights need review before external publication."
+    },
+    {
+      "source_id": "verge",
+      "name": "The Verge",
+      "publisher_id": "the-verge",
+      "ownership_group": "vox-media",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "categories": [
+        "technology",
+        "ai",
+        "business"
+      ],
+      "enabled": true
+    },
+    {
+      "source_id": "hn",
+      "name": "Hacker News - Frontpage",
+      "publisher_id": "hacker-news",
+      "url": "https://hnrss.org/frontpage",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "categories": [
+        "technology"
+      ],
+      "role": "aggregator",
+      "time_quality": "submission",
+      "enabled": false,
+      "disabled_reason": "Submission dates do not establish original publication freshness."
+    },
+    {
+      "source_id": "xinhua",
+      "name": "新华网时政",
+      "publisher_id": "xinhua",
+      "url": "http://www.xinhuanet.com/politics/news_politics.xml",
+      "language": "zh",
+      "country": "CN",
+      "region": "Asia-Pacific",
+      "enabled": false,
+      "disabled_reason": "No usable publication times in baseline feed."
+    },
+    {
+      "source_id": "people",
+      "name": "人民网时政",
+      "publisher_id": "people",
+      "url": "http://www.people.com.cn/rss/politics.xml",
+      "language": "zh",
+      "country": "CN",
+      "region": "Asia-Pacific",
+      "enabled": false,
+      "disabled_reason": "No usable publication times in baseline feed."
+    },
+    {
+      "source_id": "36kr",
+      "name": "36氪",
+      "publisher_id": "36kr",
+      "url": "https://www.36kr.com/feed",
+      "language": "zh",
+      "country": "CN",
+      "region": "Asia-Pacific",
+      "enabled": false,
+      "disabled_reason": "Baseline connection failure."
+    },
+    {
+      "source_id": "huxiu",
+      "name": "虎嗅",
+      "publisher_id": "huxiu",
+      "url": "https://rss.huxiu.com/",
+      "language": "zh",
+      "country": "CN",
+      "region": "Asia-Pacific",
+      "enabled": false,
+      "disabled_reason": "Baseline connection failure."
+    },
+    {
+      "source_id": "usgs",
+      "name": "USGS",
+      "publisher_id": "usgs",
+      "ownership_group": "usgs",
+      "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson",
+      "source_type": "usgs_geojson",
+      "language": "en",
+      "country": "US",
+      "region": "Americas",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "disasters"
+      ],
+      "role": "official",
+      "enabled": true,
+      "poll_minutes": 15,
+      "max_items": 200,
+      "discovery_url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php",
+      "usage_notes": "Official public machine-readable seismic observations; record update and occurrence times are distinct. Not an independent media publisher. Phase 3 uses the official seven-day feed to recover missed observation IDs after collection gaps. Each observation remains one official origin, not independent publisher corroboration.",
+      "validated_at": "2026-09-23T19:36:00Z"
+    },
+    {
+      "source_id": "guardian-business",
+      "name": "The Guardian",
+      "publisher_id": "guardian",
+      "ownership_group": "guardian",
+      "url": "https://www.theguardian.com/business/rss",
+      "language": "en",
+      "country": "GB",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "business",
+        "economy"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.theguardian.com/help/feeds",
+      "validated_at": "2026-09-22T06:49:23Z",
+      "disabled_reason": "",
+      "usage_notes": "Official RSS documentation specifies personal non-commercial use. Enabled for local review; production disabled pending appropriate permission. https://www.theguardian.com/help/feeds",
+      "production_enabled": false
+    },
+    {
+      "source_id": "guardian-science",
+      "name": "The Guardian",
+      "publisher_id": "guardian",
+      "ownership_group": "guardian",
+      "url": "https://www.theguardian.com/science/rss",
+      "language": "en",
+      "country": "GB",
+      "region": "Europe",
+      "coverage_regions": [
+        "Global"
+      ],
+      "categories": [
+        "science"
+      ],
+      "source_type": "rss",
+      "role": "reporting",
+      "enabled": true,
+      "time_quality": "verified",
+      "max_items": 40,
+      "poll_minutes": 30,
+      "discovery_url": "https://www.theguardian.com/help/feeds",
+      "validated_at": "2026-09-22T06:49:23Z",
+      "disabled_reason": "",
+      "usage_notes": "Official RSS documentation specifies personal non-commercial use. Enabled for local review; production disabled pending appropriate permission. https://www.theguardian.com/help/feeds",
+      "production_enabled": false
+    }
+  ]
+}

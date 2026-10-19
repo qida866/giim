@@ -46,9 +46,6 @@ async def test_title_fuzzy_dup_skipped(db_session: AsyncSession) -> None:
     assert stats_second.skipped_title_fuzzy_dup == 1
 
 
-@pytest.mark.xfail(
-    reason="fixture 架构: asyncpg event loop scope 不一致, 见 TODO 48",
-)
 async def test_cross_source_title_kept(db_session: AsyncSession) -> None:
     """不同源相同标题应各自入库。"""
     item_a = _parsed_item(source_name="新华网", url_suffix="a")
@@ -57,3 +54,17 @@ async def test_cross_source_title_kept(db_session: AsyncSession) -> None:
     stats = await deduplicate_and_insert([item_a, item_b], db_session)
     assert stats.inserted == 2
     assert stats.skipped_title_fuzzy_dup == 0
+
+
+async def test_distinct_official_observations_survive_identical_titles(db_session: AsyncSession) -> None:
+    """重复地名震情由官方事件 ID 区分；同 URL 再取仍去重。"""
+    first = _parsed_item(source_name="USGS", url_suffix="quake-a", title="M 5.0 - Japan region")
+    second = _parsed_item(source_name="USGS", url_suffix="quake-b", title=first.title)
+    first.metadata = {"official_event_id": "quake-a"}
+    second.metadata = {"official_event_id": "quake-b"}
+    result = await deduplicate_and_insert([first, second], db_session)
+    assert result.inserted == 2
+    assert result.skipped_title_fuzzy_dup == 0
+    repeated = await deduplicate_and_insert([first, second], db_session)
+    assert repeated.inserted == 0
+    assert repeated.skipped_url_dup == 2

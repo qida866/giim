@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from qdrant_client import QdrantClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from src.core.config import settings
 from src.core.logging import get_logger
@@ -19,11 +18,8 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """管理 FastAPI 应用生命周期。"""
-    db_engine: AsyncEngine = create_async_engine(
-        settings.database_url,
-        pool_pre_ping=True,
-        future=True,
-    )
+    from src.db.session import async_engine
+    db_engine = async_engine
     qdrant_client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None)
     embedding_client = EmbeddingClient()
     vector_store = QdrantVectorStore()
@@ -40,6 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        await vector_store.close()
         await db_engine.dispose()
         qdrant_client.close()
         logger.info("应用关闭完成")

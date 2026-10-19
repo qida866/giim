@@ -1,7 +1,7 @@
 [project]
 name = "giim"
-version = "0.1.0"
-description = "Global Intelligence & Impact Monitor backend scaffold."
+version = "0.3.0"
+description = "Multilingual event intelligence with attributable reporting."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

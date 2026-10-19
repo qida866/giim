@@ -1,61 +1,20 @@
-FROM python:3.11-slim AS builder
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
+FROM python:3.11.15-slim-bookworm AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app/apps/api \
+    EMBEDDING_MODEL_NAME=BAAI/bge-m3 EMBEDDING_CACHE_DIR=/app/.cache/huggingface EMBEDDING_DEVICE=cpu
 WORKDIR /app
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
-
-# torch CPU 版 (避免拉 NVIDIA CUDA 依赖,节省 2GB+)
-RUN uv pip install --system \
-    --index-url https://download.pytorch.org/whl/cpu \
-    torch>=2.0.0
-
-RUN uv pip install --system \
-    fastapi \
-    "uvicorn[standard]" \
-    "sqlalchemy[asyncio]" \
-    asyncpg \
-    alembic \
-    pydantic \
-    pydantic-settings \
-    qdrant-client \
-    structlog \
-    httpx \
-    python-dotenv \
-    pytest \
-    pytest-asyncio \
-    pytest-cov \
-    ruff \
-    mypy \
-    feedparser \
-    beautifulsoup4 \
-    python-dateutil \
-    openai \
-    sentence-transformers>=3.0.0 \
-    scikit-learn>=1.3.0 \
-    numpy>=1.24.0
-
-FROM python:3.11-slim AS runtime
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-WORKDIR /app
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /usr/local /usr/local
-COPY apps/api/src /app/src
-
-HEALTHCHECK --interval=10s --timeout=5s --retries=10 CMD wget -qO- http://localhost:8000/api/v1/health > /dev/null || exit 1
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+COPY requirements.lock /app/requirements.lock
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.lock \
+    && useradd --uid 10001 --create-home giim \
+    && mkdir -p /app/.cache/huggingface && chown -R giim:giim /app
+COPY --chown=giim:giim apps/api/src /app/apps/api/src
+COPY --chown=giim:giim scripts /app/scripts
+COPY --chown=giim:giim alembic /app/alembic
+COPY --chown=giim:giim frontend /app/frontend
+COPY --chown=giim:giim tests /app/tests
+COPY --chown=giim:giim evaluation /app/evaluation
+COPY --chown=giim:giim config /app/config
+COPY --chown=giim:giim alembic.ini pyproject.toml README.md /app/
+USER giim
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health',timeout=3)"
+EXPOSE 8000
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]

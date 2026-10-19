@@ -151,6 +151,9 @@ async def fetch_top_news_for_event(
 
 
 async def main() -> int:
+    from scripts.legacy_guard import allow_legacy_mutation
+    if not allow_legacy_mutation():
+        return 2
     """执行事件摘要主流程,返回进程退出码 (0 成功,1 失败)。"""
     try:
         cfg = load_summarize_config()

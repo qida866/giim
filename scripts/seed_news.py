@@ -69,6 +69,7 @@ def _build_seed_payload() -> list[News]:
         articles.append(
             News(
                 source_name=source_name,
+                time_quality="synthetic",
                 source_url=source_url,
                 url_hash=url_hash,
                 title=title,

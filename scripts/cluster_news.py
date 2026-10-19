@@ -261,6 +261,7 @@ def cluster_by_iso_week(
     window_results: list[WindowClusterResult] = []
     clusterer = _make_hdbscan_clusterer(cfg)
 
+    label_offset = 0
     for window_key in sorted(buckets.keys()):
         indices = buckets[window_key]
         point_count = len(indices)
@@ -292,7 +293,7 @@ def cluster_by_iso_week(
         for j, global_i in enumerate(indices):
             lab = int(local_labels[j])
             if lab != -1:
-                global_labels[global_i] = lab
+                global_labels[global_i] = lab + label_offset
 
         window_stats.append(
             {
@@ -303,6 +304,7 @@ def cluster_by_iso_week(
                 "skipped": False,
             },
         )
+        label_offset += cluster_count
         window_results.append(
             WindowClusterResult(
                 window_key=window_key,
@@ -510,6 +512,8 @@ async def persist_clusters_to_db(
     window_results: list[WindowClusterResult],
 ) -> dict[str, int]:
     """按 ISO 周窗口把聚类结果写入 events + event_news 表。"""
+    if not any(np.any(w.labels >= 0) for w in window_results):
+        raise ValueError("Refusing to replace events with zero clusters")
     llm = LLMClient()
     event_count = 0
     link_count = 0
@@ -517,9 +521,9 @@ async def persist_clusters_to_db(
         try:
             await session.execute(delete(EventNews))
             await session.execute(delete(Event))
-            await session.commit()
+            # 删除与替换处于同一事务；异常回滚恢复原始数据。
             logger.info(
-                "cluster_db_cleared",
+                "cluster_db_replacement_started",
                 message="已清空 event_news 与 events,准备写入本轮按周 hdbscan 聚类",
             )
 
@@ -567,6 +571,9 @@ async def persist_clusters_to_db(
 
 
 async def main() -> int:
+    from scripts.legacy_guard import allow_legacy_mutation
+    if not allow_legacy_mutation():
+        return 2
     """执行聚类分析主流程,返回进程退出码 (0 成功,1 失败)。"""
     try:
         cfg = load_cluster_config()

@@ -18,7 +18,7 @@ class NewsResponse(BaseModel):
     title: str
     content: str
     language: str
-    published_at: datetime
+    published_at: datetime | None
 
     @field_validator("content", mode="before")
     @classmethod

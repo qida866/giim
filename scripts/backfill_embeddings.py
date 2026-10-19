@@ -105,12 +105,15 @@ def _news_to_vector_point(news: News, vector: list[float]) -> VectorPoint:
             "title": news.title or "",
             "url": news.source_url,
             "source": news.source_name,
-            "published_at": news.published_at.isoformat(),
+            "published_at": news.published_at.isoformat() if news.published_at else None,
         },
     )
 
 
 async def main() -> int:
+    from scripts.legacy_guard import allow_legacy_mutation
+    if not allow_legacy_mutation():
+        return 2
     """执行回填主流程,返回进程退出码 (0 成功,1 失败)。"""
     try:
         batch_size = _parse_batch_size()

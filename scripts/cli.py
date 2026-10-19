@@ -14,7 +14,7 @@ import argparse
 import asyncio
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from sqlalchemy import String, cast, desc, func, select
@@ -41,7 +41,9 @@ SHOW_NEWS_LIMIT_MAX = 20
 UUID_HEX_LEN = 32
 
 
-def _format_date_utc(dt: datetime) -> str:
+def _format_date_utc(dt: datetime | None) -> str:
+    if dt is None:
+        return "未知时间"
     """转为 UTC 日期 ISO 字符串用于展示。"""
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
@@ -70,7 +72,7 @@ def _print_event_block(rank: int, event: Event, sources_count: int) -> None:
     print(f"\n#{rank}  {stars} {label} {score:.2f}")
     print(f"    📰 {event.title}")
     print(
-        f"    📅 {d1} ~ {d2} ({dur}) · 来自 {event.news_count} 家媒体 / {sources_count} 个来源"
+        f"    📅 {d1} ~ {d2} ({dur}) · 来自 {event.news_count} 篇报道 / {sources_count} 个来源"
     )
     print()
     summary = event.summary
@@ -302,7 +304,7 @@ async def _resolve_event(session, hex_id: str) -> Event | None:
         return event
 
     pattern = f"{hex_id}%"
-    stmt = select(Event).where(cast(Event.id, String).like(pattern))
+    stmt = select(Event).where(func.replace(cast(Event.id, String), "-", "").like(pattern))
     result = await session.execute(stmt)
     matches: list[Event] = list(result.scalars().all())
     if not matches:
@@ -405,7 +407,7 @@ def _print_show_detail(
     print()
     print(f"时间:     {d1} ~ {d2} ({span_days} 天)")
     print(
-        f"覆盖:     {event.news_count} 家媒体 / {sources_count} 个来源",
+        f"覆盖:     {event.news_count} 篇报道 / {sources_count} 个来源",
     )
     print(f"聚类方法: {cluster_method} ({week_key})")
     print()
@@ -456,7 +458,7 @@ async def cmd_today(limit: int) -> int:
 
         stmt = (
             select(Event)
-            .where(Event.impact_score.is_not(None))
+            .where(Event.impact_score.is_not(None), Event.status == "active", Event.last_updated_at >= datetime.now(timezone.utc) - timedelta(hours=24))
             .order_by(desc(Event.impact_score).nulls_last())
             .limit(limit)
         )

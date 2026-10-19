@@ -8,6 +8,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.db.deps import get_db
+from src.models.news import News
+from src.models.event import Event, EventNews
+
 from src.embedding import EmbeddingClient, EmbeddingError, EmbeddingRequest
 from src.vector_store import QdrantVectorStore, SearchRequest, SearchResult, VectorStoreError
 
@@ -20,6 +27,7 @@ class SearchAPIRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     query: Annotated[str, Field(min_length=1, max_length=500)]
+    hours: int = Field(default=168, ge=1, le=720)
     top_k: int = Field(default=10, ge=1, le=50)
     score_threshold: float | None = Field(
         default=None,
@@ -43,6 +51,8 @@ class SearchHit(BaseModel):
     source: str
     published_at: str
     score: float
+    language: str = ""
+    event_ids: list[str] = Field(default_factory=list)
 
 
 class SearchAPIResponse(BaseModel):
@@ -96,10 +106,13 @@ def _search_hit_from_result(result: SearchResult) -> SearchHit:
 @router.post("/search", response_model=SearchAPIResponse)
 async def semantic_search(
     body: SearchAPIRequest,
+    session: AsyncSession = Depends(get_db),
     embedder: EmbeddingClient = Depends(get_embedding_client),
     store: QdrantVectorStore = Depends(get_vector_store),
 ) -> SearchAPIResponse:
     """将查询文本向量化后在 Qdrant 中语义检索。"""
+    if not body.query.strip():
+        raise HTTPException(422, "Query must not be blank")
     started = time.perf_counter()
     try:
         embed_out = await embedder.embed(
@@ -123,6 +136,20 @@ async def semantic_search(
             SearchRequest(
                 query_vector=query_vector,
                 top_k=body.top_k,
+                filter_conditions={
+                    "must": [
+                        {"key": "time_quality", "match": {"value": "verified"}},
+                        {
+                            "key": "published_at",
+                            "range": {
+                                "gte": (
+                                    datetime.now(timezone.utc) - timedelta(hours=body.hours)
+                                ).isoformat(),
+                                "lte": datetime.now(timezone.utc).isoformat(),
+                            },
+                        },
+                    ]
+                },
                 score_threshold=body.score_threshold,
             ),
         )
@@ -132,7 +159,49 @@ async def semantic_search(
             detail=f"向量检索失败: {exc.error_type.value}",
         ) from exc
 
-    hits = [_search_hit_from_result(r) for r in search_out.results]
+    ids = [int(r.id) for r in search_out.results if str(r.id).isdigit()]
+    rows = list(
+        (
+            await session.scalars(
+                select(News).where(
+                    News.id.in_(ids),
+                    News.time_quality == "verified",
+                    News.published_at >= datetime.now(timezone.utc) - timedelta(hours=body.hours),
+                    News.published_at <= datetime.now(timezone.utc),
+                )
+            )
+        ).all()
+    )
+    by_id = {n.id: n for n in rows}
+    links = (
+        await session.execute(
+            select(EventNews.news_id, EventNews.event_id)
+            .join(Event, Event.id == EventNews.event_id)
+            .where(EventNews.news_id.in_(ids), Event.status == "active")
+        )
+    ).all()
+    event_ids = {}
+    for nid, eid in links:
+        event_ids.setdefault(nid, []).append(str(eid))
+    hits = []
+    for result in search_out.results:
+        n = by_id.get(result.id)
+        if n is None:
+            continue
+        hits.append(
+            SearchHit(
+                news_id=n.id,
+                title=n.title,
+                url=n.source_url,
+                source=n.source_name,
+                published_at=n.published_at.isoformat(),
+                score=result.score,
+                language=n.language,
+                event_ids=event_ids.get(n.id, []),
+            )
+        )
+        if len(hits) >= body.top_k:
+            break
     duration_ms = int((time.perf_counter() - started) * 1000)
 
     return SearchAPIResponse(

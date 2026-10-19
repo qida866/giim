@@ -48,3 +48,66 @@ docker-compose.override.yml
 
 # ML 模型缓存 (从 HuggingFace 下载,不进 git)
 .model_cache/
+
+# Private operational backups
+backups/
+
+# Local credentials and certificates (examples remain tracked)
+*.env
+*.env.*
+!*.env.example
+.envrc
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Database exports, vector snapshots, runtime state and local scratch
+*.dump
+*.sql.gz
+*.sql.bz2
+*.snapshot
+*.db-*
+*.sqlite-*
+*.sqlite3-*
+pg_data/
+qdrant_data/
+qdrant_storage/
+logs/
+work/
+tmp/
+.cache/
+outputs/
+
+# Downloaded model weights and serialized local datasets
+models/
+model_cache/
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.pkl
+*.pickle
+
+# Private assistant handoff and machine-specific workspace state
+PROJECT_HANDOFF.md
+.codex/
+.claude/
+.cursor/
+
+# Keep intentional, reviewed documentation images and evaluation artifacts tracked.
+# Ignoring a file does not remove earlier committed versions from Git history.
+*.backup
+*.gguf
+pytorch_model*.bin
+
+# Private research fixtures and development notes are not public release inputs.
+evaluation/*
+!evaluation/README.md
+!evaluation/synthetic-demo.json
+!evaluation/phase3-summary.json
+docs/dev-log.md
+docs/motivation.md

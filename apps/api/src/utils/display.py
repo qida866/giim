@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 EVENT_TYPE_LABELS: dict[str, str] = {
+    "incident": "[事件]",
     "breaking": "[突发]",
     "ongoing": "[进行]",
     "topic": "[话题]",
@@ -35,7 +36,7 @@ def duration_str(first_seen_at: datetime, last_updated_at: datetime) -> str:
     """首发至末更的时间跨度中文描述。"""
     diff: timedelta = last_updated_at - first_seen_at
     if diff < timedelta(days=1):
-        return "今天"
+        return "不足 1 天"
     if diff < timedelta(days=7):
         return f"{diff.days} 天"
     return f"{diff.days} 天 (长期话题)"

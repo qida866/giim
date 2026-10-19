@@ -1,6 +1,6 @@
 """应用配置模块，负责从环境变量读取设置。"""
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,10 +21,20 @@ class Settings(BaseSettings):
         default="", alias="EMBEDDING_API_KEY", description="Embedding API Key"
     )
     ingestion_trigger_token: str = Field(
-        default="dev-trigger-token-change-me",
+        default="",
         alias="INGESTION_TRIGGER_TOKEN",
-        description="POST /ingestion/trigger 的 query token（生产务必修改）",
+        description="POST /ingestion/trigger 的 Bearer token（生产至少32字符）",
     )
+
+    cors_origins: str = Field(default="", alias="CORS_ORIGINS")
+
+    @model_validator(mode="after")
+    def production_secrets(self) -> "Settings":
+        if self.app_env == "prod":
+            self.app_env = "production"
+        if self.app_env == "production" and len(self.ingestion_trigger_token) < 32:
+            raise ValueError("Production INGESTION_TRIGGER_TOKEN must contain at least 32 characters")
+        return self
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

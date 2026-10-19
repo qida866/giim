@@ -19,13 +19,20 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-_DEFAULT_TEST_DATABASE_URL = (
-    "postgresql+asyncpg://giim:giim@postgres:5432/giim_test"
-)
-
 os.environ.setdefault("APP_ENV", "dev")
 os.environ.setdefault("LOG_LEVEL", "INFO")
-os.environ.setdefault("DATABASE_URL", _DEFAULT_TEST_DATABASE_URL)
+# 测试入口在导入应用前覆盖生产 URL；单独的测试配置必须通过白名单校验。
+from sqlalchemy.engine import make_url
+
+def safe_test_url(raw: str) -> str:
+    url = make_url(raw)
+    if url.drivername != "postgresql+asyncpg" or not url.database or not url.database.endswith("_test"):
+        raise ValueError("TEST_DATABASE_URL must use asyncpg and a database ending in _test")
+    return raw
+
+os.environ["DATABASE_URL"] = safe_test_url(
+    os.environ["TEST_DATABASE_URL"]
+)
 os.environ.setdefault("QDRANT_URL", "http://qdrant:6333")
 os.environ.setdefault("QDRANT_API_KEY", "")
 os.environ.setdefault("DEEPSEEK_API_KEY", "")
@@ -66,12 +73,14 @@ def test_database_url() -> str:
     return os.environ["DATABASE_URL"]
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def test_engine(test_database_url: str) -> AsyncGenerator[AsyncEngine, None]:
     """会话级测试引擎, 指向 giim_test。"""
     engine = create_async_engine(test_database_url, pool_pre_ping=True)
-    yield engine
-    await engine.dispose()
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture

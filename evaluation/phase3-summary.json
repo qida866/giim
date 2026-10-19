@@ -1,0 +1,36 @@
+{
+  "recorded_utc": "2026-09-28/29",
+  "baseline_articles": 90,
+  "phase2_pairs": {
+    "true_positive": 95,
+    "false_negative": 51,
+    "false_positive": 4,
+    "true_negative": 3855
+  },
+  "phase3_pairs": {
+    "true_positive": 115,
+    "false_negative": 31,
+    "false_positive": 0,
+    "true_negative": 3859
+  },
+  "positive_pair_transitions": {
+    "gained": 40,
+    "lost": 20
+  },
+  "expanded": {
+    "articles": 223,
+    "relationships": 74,
+    "positive_cases": 33,
+    "positive_joined": 28,
+    "negative_cases": 21,
+    "negative_separated": 21,
+    "ambiguous_cases": 20,
+    "ambiguous_joined": 5
+  },
+  "limitations": [
+    "Agent-proposed and model-reviewed labels; no independent human adjudication.",
+    "Former holdout informed iteration and is now diagnostic.",
+    "Contextual over-merging persists outside scored negative cases.",
+    "Original publisher excerpts and raw model outputs are withheld; aggregate results are historical, not reproduced by the synthetic demo."
+  ]
+}

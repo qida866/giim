@@ -9,6 +9,7 @@ import pytest
 from httpx import AsyncClient
 
 from src.ingestion.orchestrator_schema import IngestionRunStats
+from src.core.config import settings
 
 pytestmark = pytest.mark.asyncio
 
@@ -20,8 +21,13 @@ async def test_trigger_ingestion_forbidden_invalid_token(async_client: AsyncClie
     assert response.json() == {"detail": "Invalid token"}
 
 
-async def test_trigger_ingestion_success_mocked(async_client: AsyncClient) -> None:
+async def test_trigger_ingestion_success_mocked(
+    async_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """合法 token 下调 orchestrator,此处 mock 避免真实拉 RSS。"""
+    # 测试凭据不依赖开发者的私有 .env，也不放进 URL。
+    token = "test-only-ingestion-credential"
+    monkeypatch.setattr(settings, "ingestion_trigger_token", token)
     now = datetime.now(timezone.utc)
     fake_stats = IngestionRunStats(
         started_at=now,
@@ -38,7 +44,7 @@ async def test_trigger_ingestion_success_mocked(async_client: AsyncClient) -> No
     )
     with patch("src.routers.ingestion.run_ingestion", AsyncMock(return_value=fake_stats)):
         response = await async_client.post(
-            "/api/v1/ingestion/trigger?token=dev-trigger-token-change-me"
+            "/api/v1/ingestion/trigger", headers={"Authorization": f"Bearer {token}"}
         )
     assert response.status_code == 200
     payload = response.json()

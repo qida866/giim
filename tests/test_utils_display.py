@@ -32,6 +32,6 @@ def test_event_type_label() -> None:
 def test_duration_str() -> None:
     """首发至末更时长描述。"""
     base = datetime(2026, 5, 10, 12, 0, tzinfo=timezone.utc)
-    assert duration_str(base, base + timedelta(hours=2)) == "今天"
+    assert duration_str(base, base + timedelta(hours=2)) == "不足 1 天"
     assert duration_str(base, base + timedelta(days=6)) == "6 天"
     assert duration_str(base, base + timedelta(days=10)) == "10 天 (长期话题)"

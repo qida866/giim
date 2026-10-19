@@ -36,11 +36,13 @@ class LLMClient:
         if not resolved_model:
             raise ValueError("LLM_MODEL 缺失，无法初始化 LLMClient")
 
+        self.metrics={"logical_requests":0,"attempts":0,"prompt_tokens":0,"completion_tokens":0}
         self._default_model = resolved_model
-        self._client = AsyncOpenAI(api_key=api_key, base_url=resolved_base_url, timeout=30.0)
+        self._client = AsyncOpenAI(api_key=api_key, base_url=resolved_base_url, timeout=30.0, max_retries=0)
 
     async def chat(self, request: LLMRequest) -> LLMResponse:
         """调用聊天接口并返回标准化响应。"""
+        self.metrics["logical_requests"]+=1
         model = request.model or self._default_model
         started_at = time.perf_counter()
         logger.info(
@@ -53,6 +55,7 @@ class LLMClient:
 
         max_retries = 3
         for attempt in range(0, max_retries + 1):
+            self.metrics["attempts"]+=1
             try:
                 response = await asyncio.wait_for(
                     self._client.chat.completions.create(
@@ -69,6 +72,8 @@ class LLMClient:
                     completion_tokens=(response.usage.completion_tokens if response.usage else 0),
                     total_tokens=(response.usage.total_tokens if response.usage else 0),
                 )
+                self.metrics["prompt_tokens"]+=usage.prompt_tokens
+                self.metrics["completion_tokens"]+=usage.completion_tokens
                 finish_reason = response.choices[0].finish_reason or "unknown"
                 duration_ms = int((time.perf_counter() - started_at) * 1000)
                 logger.info(
@@ -134,3 +139,6 @@ class LLMClient:
         if isinstance(error, (APIConnectionError, APIError)):
             return LLMErrorType.API_ERROR
         return LLMErrorType.UNKNOWN
+
+    async def close(self) -> None:
+        await self._client.close()

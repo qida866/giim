@@ -1,0 +1,71 @@
+name: giim-production
+x-app: &app
+  image: giim-production:local
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+  env_file: ${GIIM_ENV_FILE:-.env.production}
+  environment:
+    APP_ENV: production
+    EMBEDDING_CACHE_DIR: /app/.cache/huggingface
+    OMP_NUM_THREADS: '2'
+    TOKENIZERS_PARALLELISM: 'false'
+  restart: unless-stopped
+  init: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  volumes: [model_cache:/app/.cache/huggingface]
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: '3'}
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:4e6e670bb069649261c9c18031f0aded7bb249a5b6664ddec29c013a89310d50
+    env_file: ${GIIM_ENV_FILE:-.env.production}
+    restart: unless-stopped
+    volumes: [pg_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  qdrant:
+    image: qdrant/qdrant:v1.17.1@sha256:94728574965d17c6485dd361aa3c0818b325b9016dac5ea6afec7b4b2700865f
+    restart: unless-stopped
+    volumes: [qdrant_data:/qdrant/storage]
+  migrate:
+    <<: *app
+    restart: 'no'
+    command: [alembic, upgrade, head]
+    healthcheck: {disable: true}
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    <<: *app
+    command: [uvicorn, 'src.main:app', --host, '0.0.0.0', --port, '8000', --workers, '1', --no-access-log, --proxy-headers, '--forwarded-allow-ips=*']
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      qdrant: {condition: service_started}
+  pipeline:
+    <<: *app
+    command: [python, -m, scripts.pipeline, --interval, '1800']
+    healthcheck: {disable: true}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      qdrant: {condition: service_started}
+  proxy:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    env_file: ${GIIM_ENV_FILE:-.env.production}
+    restart: unless-stopped
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+volumes:
+  pg_data:
+  qdrant_data:
+  model_cache:
+  caddy_data:
+  caddy_config:
