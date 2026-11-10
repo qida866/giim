@@ -82,7 +82,7 @@ tmp/
 outputs/
 
 # Downloaded model weights and serialized local datasets
-models/
+/models/
 model_cache/
 *.safetensors
 *.pt
@@ -111,3 +111,8 @@ evaluation/*
 !evaluation/phase3-summary.json
 docs/dev-log.md
 docs/motivation.md
+
+# Private analyst traces and isolated component environments
+.runs/
+.agent-venv/
+.mcp-venv/
