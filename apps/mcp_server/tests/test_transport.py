@@ -101,11 +101,18 @@ async def test_authenticated_streamable_http_roundtrip():
 
             async with Client(transport()) as client:
                 assert len((await client.list_tools()).tools) == 5
-                result = await client.call_tool(
-                    "giim_get_event", {"event_id": "00000000-0000-0000-0000-000000000001"}
-                )
-                assert result.structured_content["data"]["articles"][0]["excerpt"]
-                assert len(result.model_dump_json().encode()) < 20500
+                for name, arguments in [
+                    ("giim_get_today_events", {}),
+                    ("giim_search_events", {"query": "AI laboratory"}),
+                    ("giim_get_event", {"event_id": "00000000-0000-0000-0000-000000000001"}),
+                    ("giim_get_coverage", {}),
+                    ("giim_check_ready", {}),
+                ]:
+                    result = await client.call_tool(name, arguments)
+                    assert not result.is_error and result.structured_content["ok"]
+                    assert len(result.model_dump_json().encode()) < 20500
+                    if name == "giim_get_event":
+                        assert result.structured_content["data"]["articles"][0]["excerpt"]
         finally:
             server.should_exit = True
             await asyncio.to_thread(thread.join, 3)

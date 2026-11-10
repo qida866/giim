@@ -8,6 +8,7 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from pydantic import PrivateAttr
+from giim_mcp.fixtures import select
 
 from .security import suspicious
 
@@ -134,6 +135,11 @@ class FakeModel(BaseLlm):
         claims = data.get("draft", {}).get("claims", [])
         evidence = data.get("evidence", [])
         problems = []
+        # 假模型仅理解明确标注的原创测试世界，不能把任意检索命中当成相关证据。
+        # 真实新闻的语义相关性仍须通过另行授权的真实模型验证。
+        expected_events = {row["event"]["id"] for row in select(data.get("question", ""))}
+        if not expected_events or any(s["event_id"] not in expected_events for s in evidence):
+            problems.append("evidence outside the scripted question's authored fixture scope")
         for claim in claims:
             citation = claim["citation"]
             if not any(
