@@ -102,3 +102,33 @@ async def test_language_filter_scores_and_support():
         event = await adapter.event(__import__("uuid").UUID(identifier(3)))
         assert event.articles[-1].current_support is False
         assert event.llm_review_status is None and len(event.revisions) == 1
+
+
+@pytest.mark.parametrize(
+    "tool,args",
+    [
+        ("giim_get_today_events", {}),
+        ("giim_search_events", {"query": "AI"}),
+        ("giim_get_event", {"event_id": identifier(1)}),
+    ],
+)
+async def test_card_summary_cannot_bypass_publisher_policy(tool, args):
+    import copy
+
+    row = copy.deepcopy(RECORDS[0])
+    restricted = "Authored marker representing a restricted publisher fallback excerpt."
+    row["event"].update(summary=restricted, summary_kind="source_excerpt")
+    for article in row["articles"]:
+        article["excerpt"] = restricted
+    with respx.mock(base_url="http://127.0.0.1:8000") as api:
+        api.get("/api/v1/events/today").respond(json={"events": [row["event"]]})
+        api.post("/api/v1/search/events").respond(json={"events": [row["event"]]})
+        api.get("/api/v1/events/" + identifier(1)).respond(json=row)
+        async with Client(create_server(Adapter(RestClient(Settings())))) as client:
+            result = await client.call_tool(tool, args)
+            assert not result.is_error
+            envelope = Envelope.model_validate(result.structured_content)
+            assert envelope.ok and restricted not in envelope.model_dump_json()
+            card = envelope.data.event if tool == "giim_get_event" else envelope.data.events[0]
+            assert card.summary is None
+            assert card.summary_policy == "withheld_without_source_permissions"

@@ -18,6 +18,9 @@ class EventCard(Contract):
     id: UUID
     title: str = Field(max_length=2000)
     summary: str | None = Field(default=None, max_length=2000)
+    summary_policy: Literal["withheld_without_source_permissions"] = (
+        "withheld_without_source_permissions"
+    )
     first_seen_at: str | None = None
     last_updated_at: str | None = None
     sources_count: int | None = Field(default=None, ge=0)

@@ -12,13 +12,14 @@ def card(row: dict) -> EventCard:
     keys = (
         "id",
         "title",
-        "summary",
         "first_seen_at",
         "last_updated_at",
         "sources_count",
         "languages",
     )
     values = {k: row[k] for k in keys if k in row}
+    # 卡片摘要可能是原文回退，且没有逐来源授权信息。不能绕过摘录策略。
+    # 摘要保留为 null；详情中的来源摘录另行按 publisher_caps 授权。
     # 当前事件搜索不提供分数；不从 rank 或 impact_score 推断相似度。
     values["evidence_status"] = row.get("summary_kind")
     return EventCard(**values)
