@@ -116,3 +116,6 @@ docs/motivation.md
 .runs/
 .agent-venv/
 .mcp-venv/
+
+# Private ADK sessions
+.adk/

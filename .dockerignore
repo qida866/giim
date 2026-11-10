@@ -33,3 +33,9 @@ PROJECT_HANDOFF.md
 .cursor
 docs/dev-log.md
 docs/motivation.md
+
+# Private ADK sessions and local analyst environments
+.adk/
+.agent-venv/
+.mcp-venv/
+.runs/
