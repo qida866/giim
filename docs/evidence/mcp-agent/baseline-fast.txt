@@ -1,0 +1,11 @@
+ Container giim-mcp-test-api-run-0b16259d40af Creating 
+ Container giim-mcp-test-api-run-0b16259d40af Created 
+........................................................................ [ 59%]
+.................................................                        [100%]
+=============================== warnings summary ===============================
+tests/test_pipeline_recovery.py::test_failed_pipeline_preserves_events_and_last_success
+  /usr/local/lib/python3.11/site-packages/structlog/_base.py:173: UserWarning: Remove `format_exc_info` from your processor chain if you want pretty exceptions.
+    event_dict = proc(self._logger, method_name, event_dict)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+121 passed, 11 deselected, 1 warning in 1.20s
