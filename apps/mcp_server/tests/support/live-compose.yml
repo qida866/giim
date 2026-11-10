@@ -1,0 +1,62 @@
+name: giim-gemini-trial
+# Dedicated local authored-data test stack; never shares application database volumes.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: giim
+      POSTGRES_DB: giim_live_trial_test
+      POSTGRES_PASSWORD: ${GIIM_FIXTURE_PASSWORD:?Set private fixture password}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U giim -d giim_live_trial_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  qdrant:
+    image: qdrant/qdrant:v1.17.1
+    volumes:
+      - qdrant:/qdrant/storage
+  api:
+    image: ${GIIM_LIVE_API_IMAGE:?Set an existing compatible local GIIM API image}
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://giim:${GIIM_FIXTURE_PASSWORD}@postgres:5432/giim_live_trial_test
+      QDRANT_URL: http://qdrant:6333
+      EMBEDDING_MODEL_NAME: BAAI/bge-m3
+      EMBEDDING_CACHE_DIR: /app/.cache/huggingface
+      EMBEDDING_DEVICE: cpu
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      DEEPSEEK_API_KEY: ""
+      GOOGLE_API_KEY: ""
+    volumes:
+      - ../../../../apps/api:/app/apps/api:ro
+      - ../../../../apps/api/src:/app/src:ro
+      - ../../../../alembic:/app/alembic:ro
+      - ../../../../alembic.ini:/app/alembic.ini:ro
+      - ../../../../config:/app/config:ro
+      - .:/support:ro
+      - ${GIIM_FIXTURE_MODEL_CACHE:?Set existing cache}:/app/.cache/huggingface:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+  analyst:
+    image: giim-agent-task2-accepted:local
+    network_mode: service:api
+    environment:
+      GIIM_API_URL: http://127.0.0.1:8000
+    volumes:
+      - ../../../../scripts/live_gemini_trial.py:/trial.py:ro
+      - ${GIIM_TRIAL_OUTPUT:?Set private output directory}:/results
+      - ${GIIM_GEMINI_KEY_FILE:-/dev/null}:/run/secrets/gemini_api_key:ro
+    entrypoint: [python, /trial.py]
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  postgres:
+  qdrant:

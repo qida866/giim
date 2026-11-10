@@ -1,0 +1,102 @@
+[
+  {
+    "event": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "title": "Synthetic AI laboratory opens",
+      "summary": "Authored synthetic fixture.",
+      "sources_count": 3,
+      "languages": [
+        "en",
+        "zh",
+        "es"
+      ],
+      "first_seen_at": "2026-11-10T10:00:00+00:00",
+      "last_updated_at": "2026-11-10T10:00:00+00:00",
+      "summary_kind": "synthetic"
+    },
+    "status": "active",
+    "articles": [
+      {
+        "id": 101,
+        "title": "Synthetic AI laboratory opens",
+        "url": "https://demo.example.org/1/1",
+        "source": "Authored Demo en",
+        "language": "en",
+        "published_at": "2026-11-10T10:00:00+00:00",
+        "time_quality": "verified",
+        "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks."
+      },
+      {
+        "id": 102,
+        "title": "Synthetic AI laboratory opens",
+        "url": "https://demo.example.org/1/2",
+        "source": "Authored Demo zh",
+        "language": "zh",
+        "published_at": "2026-11-10T10:00:00+00:00",
+        "time_quality": "verified",
+        "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。"
+      },
+      {
+        "id": 103,
+        "title": "Synthetic AI laboratory opens",
+        "url": "https://demo.example.org/1/3",
+        "source": "Authored Demo es",
+        "language": "es",
+        "published_at": "2026-11-10T10:00:00+00:00",
+        "time_quality": "verified",
+        "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos."
+      }
+    ],
+    "total_articles": 3,
+    "current_support_ids": [
+      101,
+      102,
+      103
+    ],
+    "revisions": []
+  },
+  {
+    "event": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "title": "Synthetic storm attendance disagreement",
+      "summary": "Authored synthetic fixture.",
+      "sources_count": 2,
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "first_seen_at": "2026-11-10T10:00:00+00:00",
+      "last_updated_at": "2026-11-10T10:00:00+00:00",
+      "summary_kind": "synthetic"
+    },
+    "status": "active",
+    "articles": [
+      {
+        "id": 401,
+        "title": "Synthetic storm attendance disagreement",
+        "url": "https://demo.example.org/4/1",
+        "source": "Authored Demo en",
+        "language": "en",
+        "published_at": "2026-11-10T10:00:00+00:00",
+        "time_quality": "verified",
+        "excerpt": "Authored Demo EN reported 12 people at the synthetic storm briefing."
+      },
+      {
+        "id": 402,
+        "title": "Synthetic storm attendance disagreement",
+        "url": "https://demo.example.org/4/2",
+        "source": "Authored Demo fr",
+        "language": "fr",
+        "published_at": "2026-11-10T10:00:00+00:00",
+        "time_quality": "verified",
+        "excerpt": "Authored Demo FR reported 18 people at the synthetic storm briefing."
+      }
+    ],
+    "total_articles": 2,
+    "current_support_ids": [
+      401,
+      402
+    ],
+    "revisions": []
+  }
+]

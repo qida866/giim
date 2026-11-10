@@ -1,0 +1,10 @@
+ Container giim-gemini-trial-qdrant-1 Running
+ Container giim-gemini-trial-postgres-1 Running
+ Container giim-gemini-trial-api-1 Running
+ Container giim-gemini-trial-postgres-1 Waiting
+ Container giim-gemini-trial-postgres-1 Healthy
+ Container giim-gemini-trial-api-1 Waiting
+ Container giim-gemini-trial-api-1 Healthy
+ Container giim-gemini-trial-analyst-run-33c72658fdc8 Creating
+ Container giim-gemini-trial-analyst-run-33c72658fdc8 Created
+PASS: five actual API MCP tools and exact authored two-event dataset; zero model calls.

@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-10",
+  "api": "Actual GIIM in dedicated giim-gemini-trial local Compose project",
+  "fixture_events": 2,
+  "fixture_reports": 5,
+  "real_bge_m3_vectors": 5,
+  "mcp_tools_verified": [
+    "giim_get_today_events",
+    "giim_search_events",
+    "giim_get_coverage",
+    "giim_check_ready",
+    "giim_get_event"
+  ],
+  "sdk_versions": {
+    "google-adk": "2.14.0",
+    "google-genai": "2.34.0",
+    "mcp": "2.3.0",
+    "pydantic": "2.14.3"
+  },
+  "preflight": "PASS",
+  "seed_nonempty_refusal": "PASS",
+  "component_tests": "115 passed, 2 existing dependency warnings",
+  "live_gemini": "BLOCKED: approval and private credential required; no calls made",
+  "main_unchanged": "28edc62816d44254d7b5b532beaeec421762bb34",
+  "task1_unchanged": "4e7b93135432d1885083822c764b8ac4c8d9feb7"
+}
