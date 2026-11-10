@@ -1,0 +1,315 @@
+{
+  "audited_commit": "12bdc154900568e2c21e7316093919c1ee7aadc1",
+  "failures": [
+    {
+      "case": "C",
+      "question": "What will happen to the stock market exactly 100 years from now?",
+      "backend": "isolated GIIM API",
+      "checks": {
+        "citations": true,
+        "bounds": true,
+        "roles": true,
+        "latencies": true,
+        "safe_refusal": false
+      },
+      "passed": false,
+      "roles": [
+        "coordinator",
+        "researcher",
+        "writer",
+        "verifier"
+      ],
+      "answer": {
+        "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/api-fixture/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/api-fixture/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/api-fixture/3]",
+        "claims": [
+          {
+            "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 600001,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/api-fixture/1"
+            }
+          },
+          {
+            "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 600002,
+              "publisher": "Authored Demo zh",
+              "url": "https://demo.example.org/api-fixture/2"
+            }
+          },
+          {
+            "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 600003,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/api-fixture/3"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5687022089841776,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 35111
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 600001,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/api-fixture/1",
+          "published_at": "2026-11-10T22:33:06.590247+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 600002,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/api-fixture/2",
+          "published_at": "2026-11-10T22:33:06.590247+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 600003,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/api-fixture/3",
+          "published_at": "2026-11-10T22:33:06.590247+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "trace": [
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.180289+00:00",
+          "kind": "request",
+          "question": "What will happen to the stock market exactly 100 years from now?",
+          "mode": "fake"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.585540+00:00",
+          "kind": "role",
+          "role": "coordinator"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.585974+00:00",
+          "kind": "role",
+          "role": "researcher"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.588620+00:00",
+          "kind": "model_start",
+          "role": "researcher",
+          "model": "giim-fake-v1"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.589135+00:00",
+          "kind": "model",
+          "role": "researcher",
+          "model": "giim-fake-v1",
+          "latency_seconds": 0.000514708983246237,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "thinking_tokens": null,
+          "estimated_cost_usd": null
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.666037+00:00",
+          "kind": "tool",
+          "role": "researcher",
+          "tool": "giim_search_events",
+          "arguments": {
+            "query": "What will happen to the stock market exactly 100 years from now?",
+            "window": "7d",
+            "limit": 5
+          },
+          "latency_seconds": 0.07651854195864871,
+          "status": "ok"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.667950+00:00",
+          "kind": "model_start",
+          "role": "researcher",
+          "model": "giim-fake-v1"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.668451+00:00",
+          "kind": "model",
+          "role": "researcher",
+          "model": "giim-fake-v1",
+          "latency_seconds": 0.0005011669709347188,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "thinking_tokens": null,
+          "estimated_cost_usd": null
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.685656+00:00",
+          "kind": "tool",
+          "role": "researcher",
+          "tool": "giim_get_event",
+          "arguments": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "latency_seconds": 0.016842749959323555,
+          "status": "ok"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.687411+00:00",
+          "kind": "model_start",
+          "role": "researcher",
+          "model": "giim-fake-v1"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.687932+00:00",
+          "kind": "model",
+          "role": "researcher",
+          "model": "giim-fake-v1",
+          "latency_seconds": 0.0005213749827817082,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "thinking_tokens": null,
+          "estimated_cost_usd": null
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.688335+00:00",
+          "kind": "role",
+          "role": "writer",
+          "iteration": 0
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.689081+00:00",
+          "kind": "model_start",
+          "role": "writer",
+          "model": "giim-fake-v1"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.689438+00:00",
+          "kind": "model",
+          "role": "writer",
+          "model": "giim-fake-v1",
+          "latency_seconds": 0.00035583297722041607,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "thinking_tokens": null,
+          "estimated_cost_usd": null
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.689775+00:00",
+          "kind": "role",
+          "role": "verifier",
+          "iteration": 0
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.690399+00:00",
+          "kind": "model_start",
+          "role": "verifier",
+          "model": "giim-fake-v1"
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.690778+00:00",
+          "kind": "model",
+          "role": "verifier",
+          "model": "giim-fake-v1",
+          "latency_seconds": 0.00037870899541303515,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "thinking_tokens": null,
+          "estimated_cost_usd": null
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.691138+00:00",
+          "kind": "verification",
+          "role": "coordinator",
+          "model_ok": true,
+          "deterministic_ok": true,
+          "errors": [],
+          "iteration": 0
+        },
+        {
+          "request_id": "b2b76b4d-428d-4d5e-90d7-dea071e2b156",
+          "timestamp": "2026-11-10T23:25:33.748977+00:00",
+          "kind": "complete",
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5687022089841776,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null
+        }
+      ]
+    }
+  ],
+  "finding": "Fake verifier accepted valid but irrelevant authored evidence returned by actual vector retrieval."
+}

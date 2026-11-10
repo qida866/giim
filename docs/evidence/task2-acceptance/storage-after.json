@@ -1,0 +1,22 @@
+{
+  "news": {
+    "count": 3,
+    "sha256": "f01c051ec495e471fea4abe3619f6cb0adc0f8a787f5c934b8c5ebae5c80da33"
+  },
+  "events": {
+    "count": 1,
+    "sha256": "db8b6048fc8b9795c5e19873bedb9a611dc741577919bd3d45e83988aedb318a"
+  },
+  "event_news": {
+    "count": 3,
+    "sha256": "8a236f1978c42e872c3277efd7adb6e98537993d46abc3577f5e38687bfacbac"
+  },
+  "event_revisions": {
+    "count": 1,
+    "sha256": "ed8b6dbaa605dc5de9102902f2b2f2076788a3d44b394c0cc4fb256f49d33644"
+  },
+  "vectors": {
+    "count": 3,
+    "sha256": "0ba0133c519b30e37579041aba25e2d9ad6ff224f8e5fc3594196d03ecd05299"
+  }
+}

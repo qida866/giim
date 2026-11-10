@@ -1,0 +1,9 @@
+authored REST A: PASS verified
+authored REST B: PASS verified
+authored REST C: PASS insufficient_evidence
+authored REST D: PASS insufficient_evidence
+authored REST E: PASS insufficient_evidence
+authored REST F: PASS verified
+isolated GIIM API A: PASS verified
+isolated GIIM API B: PASS verified
+isolated GIIM API C: PASS insufficient_evidence

@@ -57,7 +57,7 @@ python -m giim_agent ask "What happened at the AI laboratory?" --demo --trace
 python -m giim_agent ask "What is the unicorn stock price?" --demo --json
 ```
 
-The first answer contains three synthetic EN/ZH/ES excerpts with citations, `mode=fake`, `verified=true`, two tool calls and five model calls. The second returns `insufficient_evidence` and exit code **2** intentionally. Verified answers exit 0; invalid CLI configuration exits 1 or argparse's usage code. Fake models never contact Gemini. Without `--demo`, fake models use the configured real GIIM API; they remain scripted and are not a general reasoning system.
+The first answer contains three synthetic EN/ZH/ES excerpts with citations, `mode=fake`, `verified=true`, two tool calls and five model calls. The second returns `insufficient_evidence` and exit code **2** intentionally. Verified answers exit 0; invalid CLI configuration exits 1 or argparse's usage code. Fake models never contact Gemini. Without `--demo`, fake models use the configured real GIIM API, but verification is restricted to the authored fixture identities and question-routing rules. Unrelated retrieved candidates and arbitrary real-news identities are refused. This is a test double, not a general relevance model; real-news reasoning requires separately authorized live verification.
 
 An independently built Docker image also supports non-editable installed packages:
 
@@ -180,6 +180,8 @@ Estimated cost is `(input_tokens × input_rate + (output_tokens + thinking_token
 
 ## Tests, evaluation and human review
 
+The [acceptance audit](reports/TASK2_ACCEPTANCE_REPORT.md) found and fixed a blind spot: approximate real-backend retrieval could return valid but irrelevant evidence that the original fake Verifier approved. New forced-candidate regressions and exact user-supplied acceptance questions verify the fake model's bounded fixture relevance rules. This fix does not establish live Gemini relevance accuracy.
+
 ```sh
 python -m pytest -q -c apps/agent/pyproject.toml apps/agent/tests apps/mcp_server/tests
 ruff check apps/agent apps/mcp_server scripts/summarize_runs.py scripts/sample_agent_evals.py
@@ -187,6 +189,7 @@ ruff format --check apps/agent apps/mcp_server scripts/summarize_runs.py scripts
 python -m giim_agent.eval --output .runs/evaluation.json --trace-dir .runs/eval
 python scripts/sample_agent_evals.py .runs/evaluation.json --output .runs/human-review.json
 python scripts/summarize_runs.py .runs/eval
+python scripts/verify_task2_acceptance.py --output .runs/acceptance
 ```
 
 The evaluation has 24 authored cases, three in each of eight categories: basic retrieval, multilingual queries, evolving events, insufficient evidence, conflicting reporting, injection, citations and budgets. Every case traverses real ADK and subprocess MCP. Fake models and keyword-routed fixture search are explicit; faults deliberately exercise corrupted references, bad arguments, unauthorized tools and loops. Checks validate status, evidence associations, exact quotes, expected events, refusal behavior, budgets and output schema. This measures software behavior, **not Gemini accuracy, bge-m3 recall or general injection immunity**. Human sampling is deterministic (seed 42) and leaves all ten ratings empty.

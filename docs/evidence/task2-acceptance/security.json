@@ -1,0 +1,129 @@
+{
+  "commit": "271f672c28d8fdf25c5fc4ded73630e38a995c7f",
+  "tracked_files_scanned": 250,
+  "reachable_blobs_scanned": 365,
+  "candidate_pattern_findings": [
+    {
+      "path": ".env.example",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/support/compose.yml",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "kind": "credential_url"
+    },
+    {
+      "path": "deploy/production.env.example",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_source_registry.py",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_test_isolation.py",
+      "kind": "credential_url"
+    }
+  ],
+  "active_local_value_matches": [],
+  "historical_pattern_findings": [
+    {
+      "path": ".env.example",
+      "object": "e56f186e5d7b",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/support/compose.yml",
+      "object": "402c49ba8d1d",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "object": "eb81c526730f",
+      "kind": "credential_url"
+    },
+    {
+      "path": "deploy/production.env.example",
+      "object": "cb47b2394f4f",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_source_registry.py",
+      "object": "ad9dc263689c",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_test_isolation.py",
+      "object": "595a209e0d06",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "object": "0d87c62ebf96",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "d768fbff2b7b",
+      "kind": "provider_key"
+    },
+    {
+      "path": ".env.example",
+      "object": "d768fbff2b7b",
+      "kind": "credential_url"
+    },
+    {
+      "path": "docs/dev-log.md",
+      "object": "3aaaa210ea1c",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "a4abbcbcd336",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "79626ec1d9ca",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "ce9c99aa109c",
+      "kind": "provider_key"
+    },
+    {
+      "path": ".env.example",
+      "object": "ce9c99aa109c",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "50cf65f96217",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "95503dec080d",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "9b2f4a792b8f",
+      "kind": "credential_url"
+    }
+  ],
+  "active_local_history_matches": [],
+  "mcp_direct_storage_imports": [],
+  "limitations": "Pattern and available local credential matching only; no provider account validation, complete vulnerability scan or security certification. Historical developer credential examples remain in existing public history; provider-key-shaped examples are placeholders. New occurrences are templates and synthetic rejection tests. No secret values are included in this report.",
+  "final_candidate_review": {
+    "candidate_files_scanned": 272,
+    "available_private_configuration_files": 2,
+    "active_local_value_matches": [],
+    "new_export_high_confidence_pattern_findings": [],
+    "scope": "Tracked and untracked nonignored candidate files; available local secrets compared without printing values. Earlier reachable-history scan retained above."
+  }
+}

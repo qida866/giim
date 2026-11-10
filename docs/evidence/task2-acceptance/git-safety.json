@@ -1,0 +1,49 @@
+{
+  "audit_start": "12bdc154900568e2c21e7316093919c1ee7aadc1",
+  "tested_code_commit": "271f672c28d8fdf25c5fc4ded73630e38a995c7f",
+  "active_branch": "feature/mcp-agent",
+  "refs_before_documentation_commit": {
+    "main": "28edc62816d44254d7b5b532beaeec421762bb34",
+    "feature/gcp-deploy": "4e7b93135432d1885083822c764b8ac4c8d9feb7",
+    "feature/mcp-agent": "271f672c28d8fdf25c5fc4ded73630e38a995c7f",
+    "origin/main": "651ffbc1a038c76c7c0d74be30bcc2b4538faf4d",
+    "release/phase3-public": "651ffbc1a038c76c7c0d74be30bcc2b4538faf4d"
+  },
+  "protected_worktrees": {
+    "main": {
+      "head": "28edc62816d44254d7b5b532beaeec421762bb34",
+      "status_porcelain": ""
+    },
+    "feature/gcp-deploy": {
+      "head": "4e7b93135432d1885083822c764b8ac4c8d9feb7",
+      "status_porcelain": ""
+    }
+  },
+  "unchanged_since_audit_start": {
+    "apps/api": true,
+    "alembic": true,
+    "frontend": true,
+    "tests": true,
+    "evaluation": true,
+    "pyproject.toml": true
+  },
+  "worktrees": [
+    "worktree /Users/qida/Desktop/giim",
+    "HEAD 28edc62816d44254d7b5b532beaeec421762bb34",
+    "branch refs/heads/main",
+    "",
+    "worktree /Users/qida/Documents/Codex/2026-09-21/you-are-taking-over-my-existing/work/gcp-deploy",
+    "HEAD 4e7b93135432d1885083822c764b8ac4c8d9feb7",
+    "branch refs/heads/feature/gcp-deploy",
+    "",
+    "worktree /Users/qida/Documents/Codex/2026-09-21/you-are-taking-over-my-existing/work/mcp-agent",
+    "HEAD 271f672c28d8fdf25c5fc4ded73630e38a995c7f",
+    "branch refs/heads/feature/mcp-agent",
+    "",
+    "worktree /Users/qida/Documents/Codex/2026-09-21/you-are-taking-over-my-existing/work/public-release",
+    "HEAD 651ffbc1a038c76c7c0d74be30bcc2b4538faf4d",
+    "branch refs/heads/release/phase3-public"
+  ],
+  "task3_scope": "No Task 3 branch or worktree in the local inventory; work elsewhere is not verified.",
+  "audit_actions": "No fetch, push, merge, history rewrite or branch deletion. Documentation and evidence are pending a final local feature-branch commit."
+}
