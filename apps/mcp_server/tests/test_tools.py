@@ -26,7 +26,7 @@ def server():
 
 async def test_discovery_and_all_tools():
     with respx.mock(base_url="http://127.0.0.1:8000") as api:
-        api.get("/api/v1/events/today").respond(json=[RECORDS[0]["event"]])
+        api.get("/api/v1/events/today").respond(json={"events": [RECORDS[0]["event"]]})
         api.post("/api/v1/search/events").respond(json={"events": [RECORDS[0]["event"]]})
         api.get("/api/v1/events/" + identifier(1)).respond(json=RECORDS[0])
         api.get("/api/v1/coverage").respond(
@@ -92,7 +92,7 @@ async def test_whitespace_and_unknown_tool():
 async def test_language_filter_scores_and_support():
     with respx.mock as api:
         api.get("http://127.0.0.1:8000/api/v1/events/today").respond(
-            json=[r["event"] for r in RECORDS[:2]]
+            json={"events": [r["event"] for r in RECORDS[:2]]}
         )
         api.get("http://127.0.0.1:8000/api/v1/events/" + identifier(3)).respond(json=RECORDS[2])
         adapter = Adapter(RestClient(Settings(publisher_caps=CAPS)))

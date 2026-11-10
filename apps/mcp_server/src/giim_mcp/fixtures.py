@@ -16,7 +16,7 @@ def record(
     event_id = identifier(number)
     articles = [
         {
-            "id": identifier(number * 100 + i),
+            "id": number * 100 + i,
             "title": title,
             "url": f"https://demo.example.org/{number}/{i}",
             "source": "Authored Demo " + lang,
@@ -33,14 +33,14 @@ def record(
         "summary": "Authored synthetic fixture.",
         "sources_count": len(articles),
         "languages": [lang for lang, _ in excerpts],
-        "first_seen": STAMP,
-        "last_updated": STAMP,
+        "first_seen_at": STAMP,
+        "last_updated_at": STAMP,
         "summary_kind": "synthetic",
     }
     support = [a["id"] for a in articles]
     revisions = []
     if revision:
-        old_id = identifier(number * 100 + 90)
+        old_id = number * 100 + 90
         articles.append(
             {
                 **articles[0],

@@ -45,7 +45,7 @@ def create_http_app(
                 scope, receive, send
             )
         auth = headers.get("authorization", "")
-        if token and not hmac.compare_digest(auth, "Bearer " + token):
+        if token and not hmac.compare_digest(auth.encode(), ("Bearer " + token).encode()):
             return await JSONResponse({"error": "unauthorized"}, status_code=401)(
                 scope, receive, send
             )

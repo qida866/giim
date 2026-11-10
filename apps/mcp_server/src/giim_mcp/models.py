@@ -1,11 +1,12 @@
 """工具输出契约；未知数据显式保留为空。"""
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 Window = Literal["24h", "3d", "7d"]
+ArticleID = Annotated[int, Field(strict=True, gt=0)]
 HOURS = {"24h": 24, "3d": 72, "7d": 168}
 
 
@@ -17,8 +18,8 @@ class EventCard(Contract):
     id: UUID
     title: str = Field(max_length=2000)
     summary: str | None = Field(default=None, max_length=2000)
-    first_seen: str | None = None
-    last_updated: str | None = None
+    first_seen_at: str | None = None
+    last_updated_at: str | None = None
     sources_count: int | None = Field(default=None, ge=0)
     languages: list[str] = Field(default_factory=list)
     evidence_status: str | None = None
@@ -26,7 +27,7 @@ class EventCard(Contract):
 
 
 class Source(Contract):
-    article_id: UUID
+    article_id: ArticleID
     event_id: UUID
     publisher: str | None = None
     url: str | None = None
@@ -35,6 +36,7 @@ class Source(Contract):
     title: str | None = None
     excerpt: str | None = None
     current_support: bool | None = None
+    time_quality: str | None = None
     excerpt_policy: str = "withheld"
 
 
@@ -50,7 +52,7 @@ class Revision(Contract):
     recorded_at: str | None = None
     origin_event_id: UUID | None = None
     title: str | None = None
-    evidence_ids: list[UUID] = Field(default_factory=list)
+    evidence_ids: list[ArticleID] | None = None
 
 
 class Detail(Contract):
@@ -59,7 +61,7 @@ class Detail(Contract):
     status: str | None = None
     articles: list[Source]
     total_articles: int | None = None
-    evidence_ids: list[UUID] | None = None
+    evidence_ids: list[ArticleID] | None = None
     llm_review_status: str | None = None
     revisions: list[Revision] = Field(default_factory=list)
 

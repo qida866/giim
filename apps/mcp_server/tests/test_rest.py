@@ -125,3 +125,47 @@ def test_config_origin_restrictions(url):
 )
 def test_source_url_restrictions(url):
     assert safe_url(url) is None
+
+
+async def test_actual_api_contract_integer_ids_timestamps_and_today_wrapper():
+    from giim_mcp.normalize import detail
+    from giim_mcp.fixtures import STAMP
+
+    row = copy.deepcopy(RECORDS[0])
+    row["revisions"] = [
+        {
+            "recorded_at": STAMP,
+            "origin_event_id": identifier(1),
+            "title": "Authored update",
+            "reporting": [{"news_id": 101}],
+        }
+    ]
+    result = detail(row, UUID(identifier(1)), Settings(publisher_caps=CAPS))
+    assert result.articles[0].article_id == 101 and result.articles[0].current_support
+    assert result.event.first_seen_at == STAMP and result.event.last_updated_at == STAMP
+    assert result.revisions[0].evidence_ids == [101]
+    with respx.mock as api:
+        api.get("http://127.0.0.1:8000/api/v1/events/today").respond(
+            json={"events": [row["event"]], "total_events": 1}
+        )
+        adapter = Adapter(RestClient(Settings()))
+        assert len((await adapter.today("24h", 10, None)).events) == 1
+
+
+@pytest.mark.parametrize(
+    "status,model,expected",
+    [
+        ("ready", None, None),
+        ("ready", False, False),
+        ("ready", True, True),
+        ("degraded", True, False),
+        ("unavailable", None, False),
+    ],
+)
+def test_readiness_never_infers_model_from_storage(status, model, expected):
+    from giim_mcp.normalize import readiness
+
+    row = {"status": status, "database": True, "vectors": True}
+    if model is not None:
+        row["model_loaded"] = model
+    assert readiness(row).search_ready is expected

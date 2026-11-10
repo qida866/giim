@@ -1,13 +1,23 @@
 """从实际 API 契约提取允许的字段；不传播任意 provenance。"""
 
 from uuid import UUID
+from pydantic import TypeAdapter
+from .models import ArticleID
 
 from .config import Settings, safe_url
 from .models import Coverage, Detail, EventCard, Readiness, Revision, Source
 
 
 def card(row: dict) -> EventCard:
-    keys = ("id", "title", "summary", "first_seen", "last_updated", "sources_count", "languages")
+    keys = (
+        "id",
+        "title",
+        "summary",
+        "first_seen_at",
+        "last_updated_at",
+        "sources_count",
+        "languages",
+    )
     values = {k: row[k] for k in keys if k in row}
     # 当前事件搜索不提供分数；不从 rank 或 impact_score 推断相似度。
     values["evidence_status"] = row.get("summary_kind")
@@ -15,7 +25,7 @@ def card(row: dict) -> EventCard:
 
 
 def source(
-    row: dict, event_id: UUID, settings: Settings, support: list[str] | None = None
+    row: dict, event_id: UUID, settings: Settings, support: list[int] | None = None
 ) -> Source:
     publisher = row.get("source")
     cap = min(settings.excerpt_limit, settings.publisher_caps.get(publisher, 0))
@@ -27,9 +37,10 @@ def source(
         url=safe_url(row.get("url")),
         published_at=row.get("published_at"),
         language=row.get("language"),
+        time_quality=row.get("time_quality"),
         title=(row.get("title") or "")[:500] or None,
         excerpt=excerpt[:cap] if cap and isinstance(excerpt, str) else None,
-        current_support=str(row.get("id")) in support if support is not None else None,
+        current_support=row.get("id") in support if support is not None else None,
         excerpt_policy="explicit_publisher_cap" if cap else "withheld",
     )
 
@@ -41,13 +52,17 @@ def detail(row: dict, requested: UUID, settings: Settings) -> Detail:
         raise ValueError("Event identity mismatch")
     support = row.get("current_support_ids")
     if support is not None:
-        support = [str(UUID(str(value))) for value in support]
+        support = TypeAdapter(list[ArticleID]).validate_python(support)
     revisions = [
         Revision(
             recorded_at=r.get("recorded_at"),
             origin_event_id=r.get("origin_event_id"),
             title=(r.get("title") or "")[:500] or None,
-            evidence_ids=r.get("evidence_ids") or [],
+            evidence_ids=(
+                [item["news_id"] for item in r["reporting"]]
+                if "reporting" in r
+                else r.get("evidence_ids")
+            ),
         )
         for r in row.get("revisions", [])[:20]
     ]
@@ -83,8 +98,10 @@ def coverage(row: dict) -> Coverage:
 
 def readiness(row: dict) -> Readiness:
     status = row["status"]
+
     def boolean(name: str) -> bool | None:
         return row.get(name) if isinstance(row.get(name), bool) else None
+
     db, vectors, model = (boolean(k) for k in ("database", "vectors", "model_loaded"))
     ready = (
         False

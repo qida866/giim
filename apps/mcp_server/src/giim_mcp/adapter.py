@@ -47,9 +47,7 @@ class Adapter:
             "/api/v1/events/today",
             params={"hours": HOURS[window], "limit": 50 if language else limit},
         )
-        if not isinstance(rows, list):
-            raise ValueError("Expected event array")
-        events = [normalize.card(r) for r in rows]
+        events = [normalize.card(r) for r in rows["events"]]
         if language:
             events = [r for r in events if language in r.languages]
         return Listing(

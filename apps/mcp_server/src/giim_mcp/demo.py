@@ -30,7 +30,7 @@ class Handler(BaseHTTPRequestHandler):
                 }
             )
         elif path == "/api/v1/events/today":
-            self.reply([r["event"] for r in RECORDS])
+            self.reply({"events": [r["event"] for r in RECORDS], "total_events": len(RECORDS)})
         elif path.startswith("/api/v1/events/"):
             found = next((r for r in RECORDS if r["event"]["id"] == path.rsplit("/", 1)[1]), None)
             self.reply(found or {"detail": "not found"}, 200 if found else 404)

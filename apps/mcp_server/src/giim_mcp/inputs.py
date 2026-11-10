@@ -37,6 +37,10 @@ INPUTS = {
 async def strict_inputs(ctx, call_next):
     if ctx.method == "tools/call":
         params = ctx.params or {}
+        if not isinstance(params, dict):
+            return CallToolResult(
+                is_error=True, content=[TextContent(type="text", text="invalid_request")]
+            )
         schema = INPUTS.get(params.get("name"))
         if schema:
             try:
