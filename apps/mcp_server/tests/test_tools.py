@@ -121,9 +121,12 @@ async def test_card_summary_cannot_bypass_publisher_policy(tool, args):
     for article in row["articles"]:
         article["excerpt"] = restricted
     with respx.mock(base_url="http://127.0.0.1:8000") as api:
-        api.get("/api/v1/events/today").respond(json={"events": [row["event"]]})
-        api.post("/api/v1/search/events").respond(json={"events": [row["event"]]})
-        api.get("/api/v1/events/" + identifier(1)).respond(json=row)
+        if tool == "giim_get_today_events":
+            api.get("/api/v1/events/today").respond(json={"events": [row["event"]]})
+        elif tool == "giim_search_events":
+            api.post("/api/v1/search/events").respond(json={"events": [row["event"]]})
+        else:
+            api.get("/api/v1/events/" + identifier(1)).respond(json=row)
         async with Client(create_server(Adapter(RestClient(Settings())))) as client:
             result = await client.call_tool(tool, args)
             assert not result.is_error
