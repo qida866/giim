@@ -1,0 +1,136 @@
+{
+  "method": "Local credential exact-match and provider-key/private-key/credential-URL pattern review; never prints values; not a complete secret or vulnerability audit",
+  "candidate_file_count": 248,
+  "candidate_pattern_findings_for_review": [
+    {
+      "path": ".env.example",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/support/compose.yml",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "kind": "credential_url"
+    },
+    {
+      "path": "deploy/production.env.example",
+      "kind": "credential_url"
+    },
+    {
+      "path": "docs/reports/mcp-agent-report.md",
+      "kind": "provider_key"
+    },
+    {
+      "path": "tests/test_source_registry.py",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_test_isolation.py",
+      "kind": "credential_url"
+    }
+  ],
+  "active_local_credential_matches": [],
+  "history_unique_objects": 508,
+  "history_pattern_findings_for_review": [
+    {
+      "path": ".env.example",
+      "object": "e56f186e5d7b",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/support/compose.yml",
+      "object": "402c49ba8d1d",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "object": "eb81c526730f",
+      "kind": "credential_url"
+    },
+    {
+      "path": "deploy/production.env.example",
+      "object": "cb47b2394f4f",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_source_registry.py",
+      "object": "ad9dc263689c",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/test_test_isolation.py",
+      "object": "595a209e0d06",
+      "kind": "credential_url"
+    },
+    {
+      "path": "apps/mcp_server/tests/test_rest.py",
+      "object": "0d87c62ebf96",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "d768fbff2b7b",
+      "kind": "provider_key"
+    },
+    {
+      "path": ".env.example",
+      "object": "d768fbff2b7b",
+      "kind": "credential_url"
+    },
+    {
+      "path": "docs/dev-log.md",
+      "object": "3aaaa210ea1c",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "a4abbcbcd336",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "79626ec1d9ca",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "ce9c99aa109c",
+      "kind": "provider_key"
+    },
+    {
+      "path": ".env.example",
+      "object": "ce9c99aa109c",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "50cf65f96217",
+      "kind": "credential_url"
+    },
+    {
+      "path": ".env.example",
+      "object": "95503dec080d",
+      "kind": "credential_url"
+    },
+    {
+      "path": "tests/conftest.py",
+      "object": "9b2f4a792b8f",
+      "kind": "credential_url"
+    }
+  ],
+  "active_local_credential_history_matches": [],
+  "review": {
+    "candidate_findings": "Credential URL placeholders, environment interpolation and authored rejection/isolation tests; no active secret found.",
+    "historical_provider_patterns": "Both historical DEEPSEEK_API_KEY matches are explicit placeholder text, not provider credentials.",
+    "historical_database_examples": "Existing public history contains development database credential literals in .env.example, docs/dev-log.md and tests/conftest.py. They do not match current local secrets. History was not rewritten; independent release review remains prudent.",
+    "scope": "Final runtime/test commit plus candidate documentation/evidence exports, all reachable branch-history blobs; active-value matching limited to available local configuration. No provider account checks, comprehensive vulnerability scan or certification.",
+    "fixture_rights": "New evaluation data and sample outputs are authored synthetic content; no private corpus, database snapshot, weights or raw private traces included.",
+    "summary_policy": "Recent/search/detail event-card summaries withheld so publisher fallback text cannot bypass authorized source caps; three protocol regressions pass.",
+    "MCP_runtime_storage_imports": "AST inspection found no direct backend, SQLAlchemy, asyncpg or Qdrant imports in apps/mcp_server/src.",
+    "pattern_false_positive": "The provider-key pattern also matched letters inside the report Markdown anchor task-2-extension-review--november-10-2026; this is not a credential."
+  },
+  "history_blobs_scanned": 340,
+  "implementation_commit": "74b64d380078c05f7bdad0b69e6f0517b62e3801"
+}

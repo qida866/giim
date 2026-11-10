@@ -1,5 +1,5 @@
- Container giim-mcp-test-api-run-0b16259d40af Creating 
- Container giim-mcp-test-api-run-0b16259d40af Created 
+ Container giim-mcp-test-api-run-0b16259d40af Creating
+ Container giim-mcp-test-api-run-0b16259d40af Created
 ........................................................................ [ 59%]
 .................................................                        [100%]
 =============================== warnings summary ===============================

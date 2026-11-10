@@ -1,0 +1,93 @@
+{
+  "method": "Actual isolated GIIM REST API, PostgreSQL, Qdrant and cached CPU bge-m3; fake ADK models",
+  "implementation_commit": "74b64d380078c05f7bdad0b69e6f0517b62e3801",
+  "dataset": "one authored synthetic event, three articles and bge-m3 vectors; isolated stores only",
+  "tools": [
+    "giim_get_today_events",
+    "giim_search_events",
+    "giim_get_event",
+    "giim_get_coverage",
+    "giim_check_ready"
+  ],
+  "all_tools_ok": true,
+  "chinese_search_returned_event_ids": [
+    "00000000-0000-0000-0000-000000000001"
+  ],
+  "detail_article_id_type": "integer",
+  "detail_timestamps_present": true,
+  "event_summary": null,
+  "event_summary_policy": "withheld_without_source_permissions",
+  "revision_evidence_ids": [
+    600001,
+    600002,
+    600003
+  ],
+  "readiness": {
+    "kind": "readiness",
+    "api_status": "ready",
+    "search_ready": null,
+    "database": true,
+    "vectors": true,
+    "model_loaded": null,
+    "note": "Storage health alone does not prove search readiness."
+  },
+  "answer": {
+    "request_id": "c2f8534e-095e-4944-844a-b89437cdba2f",
+    "status": "verified",
+    "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/api-fixture/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/api-fixture/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/api-fixture/3]",
+    "claims": [
+      {
+        "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+        "citation": {
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "article_id": 600001,
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/api-fixture/1"
+        }
+      },
+      {
+        "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+        "citation": {
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "article_id": 600002,
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/api-fixture/2"
+        }
+      },
+      {
+        "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+        "citation": {
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "article_id": 600003,
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/api-fixture/3"
+        }
+      }
+    ],
+    "verified": true,
+    "revisions": 0,
+    "mode": "fake",
+    "failure_category": null,
+    "trace": {
+      "status": "verified",
+      "verified": true,
+      "revisions": 0,
+      "failure_category": null,
+      "latency_seconds": 0.7702860000426881,
+      "tool_calls": 2,
+      "tools": [
+        "giim_search_events",
+        "giim_get_event"
+      ],
+      "model_calls": 5,
+      "input_tokens": null,
+      "output_tokens": null,
+      "total_tokens": null,
+      "estimated_cost_usd": null,
+      "tool_rounds": 2,
+      "detail_calls": 1,
+      "conservative_token_reservation": 34908
+    }
+  },
+  "limitation": "Smoke test using a tiny authored fixture and fake ADK models; not a multilingual recall or live Gemini quality benchmark."
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "mcp",
+    "version": "2.3.0",
+    "license": "MIT"
+  },
+  {
+    "name": "google-adk",
+    "version": "2.14.0",
+    "license": null
+  },
+  {
+    "name": "google-genai",
+    "version": "2.34.0",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "pydantic",
+    "version": "2.14.3",
+    "license": "MIT"
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "name": "httpx2",
+    "version": "2.16.0",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "name": "uvicorn",
+    "version": "0.46.0",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "name": "PyYAML",
+    "version": "6.0.3",
+    "license": "MIT"
+  }
+]

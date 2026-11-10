@@ -52,3 +52,9 @@ The pipeline uses PostgreSQL advisory locking and preserves the last successful 
 Phase 3 improved the dated 90-report positive-pair result from 95 to 115, while losing 20 previously joined positives and recovering 40. Contextual over-merging persists outside the scored negative cases. Labels were machine-assisted, the former holdout informed tuning, and the corpus is English-skewed. See [evaluation](evaluation.md) and the [Phase 3 report](../PHASE3_EVENT_RECALL_REPORT.md).
 
 Next quality work should use fresh human-adjudicated direct-update versus contextual-reporting cases before relaxing candidate gates. bge-m3, storage architecture and existing safeguards are retained.
+
+## Optional Task 2 analyst extension
+
+`apps/mcp_server` uses the existing REST routes through a bounded HTTP adapter; it never imports database/vector-store internals. `apps/agent` runs an independent pinned Google ADK environment and communicates with that server using the official MCP client. The Researcher gathers evidence, the Coordinator drafts through an internal Writer, and an independent Verifier plus deterministic event/article/URL/excerpt checks gate the final answer. Each request gets its own session, evidence ledger and budgets. No ingestion, clustering, publication or frontend routes are changed.
+
+The default synthetic demonstration and evaluation use a scripted ADK `BaseLlm` while retaining actual tool calls, transports and orchestration. A separate smoke uses real GIIM REST, PostgreSQL, Qdrant and cached bge-m3 with authored records. Gemini integration is implemented but still requires an authorized live test. See [the agent guide](mcp-agent.md) for the actual workflow, limits and evidence.

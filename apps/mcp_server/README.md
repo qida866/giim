@@ -18,6 +18,8 @@ For HTTP: `python -m giim_mcp --transport streamable-http --port 8001`. Defaults
 
 Tool responses are limited to 20,000 JSON bytes plus small protocol overhead and explicitly mark truncation. Unknown publisher excerpts are withheld; `GIIM_MCP_PUBLISHER_CAPS` is an operator-reviewed JSON mapping of exact publisher names to permitted character limits (0–500). A character cap is not a license grant. Publisher URLs containing queries, credentials, fragments or unsafe schemes are withheld. Source URLs are references only and are never fetched.
 
+Event-card summaries are also withheld (`summary=null`, explicit `summary_policy`), because the upstream summary may be publisher fallback text without per-source permissions. Authorized excerpts are available only through policy-controlled source records. This does not change the existing GIIM API or frontend.
+
 Search ranks are preserved; absent similarity scores remain null. Coverage describes observed articles, publishers and languages, not global completeness. The Phase 3 readiness route does not expose model loading, so search readiness can remain unknown even with HTTP 200. Event aliases must be fetched by their canonical ID. History is separate from current supporting evidence.
 
 ```sh

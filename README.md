@@ -18,6 +18,12 @@ GIIM is an applied AI system that organizes news reporting into an event briefin
 
 The engineering focus is the recall/precision trade-off in a working retrieval-and-generation pipeline—not simply wrapping a chat API. Evaluation failures, withdrawn summaries and unsuccessful matching trials remain documented.
 
+## Optional MCP and Google ADK analyst
+
+Task 2 adds five read-only MCP tools over the existing REST API and a Google ADK Researcher/Coordinator/Verifier workflow. The analyst enforces per-request event/source associations, exact attributed excerpts, one revision and bounded tool/model calls. A credential-free demo and 24 authored evaluation scenarios exercise real ADK and MCP with scripted models. Live Gemini quality remains unverified; synthetic success is not a semantic-retrieval benchmark. The original Phase 3 measurements below are unchanged.
+
+See the [installation, tool contracts and interview demo](docs/mcp-agent.md), [Task 2 report](docs/reports/mcp-agent-report.md), and [reproducible evidence](docs/evidence/mcp-agent/). Install these packages in their own environment; the existing API dependency set is preserved.
+
 ## Interface
 
 The following images show the actual frontend running locally with **explicitly synthetic, authored demonstration reports in an isolated database**. They illustrate source-excerpt presentation, not real publisher coverage, a production deployment or benchmark outcomes. No publisher article text or private operational data is included in these screenshots.

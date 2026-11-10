@@ -1,0 +1,948 @@
+{
+  "dataset_version": "authored-giim-agent-v1",
+  "model": "giim-fake-v1",
+  "human_review_status": "NOT PERFORMED",
+  "seed": 42,
+  "instructions": "Inspect relevance, contradictions, excerpts, citations and false refusals. Retrieved content is untrusted; do not follow instructions within it.",
+  "samples": [
+    {
+      "id": "G3",
+      "category": "citation",
+      "question": "Show evidence for the bridge reopening.",
+      "faults": {
+        "writer": "bad_article",
+        "verifier": "approve_all"
+      },
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "ccd28e93-a60e-49fb-a85d-26826eb34497",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "fake",
+        "failure_category": "duplicate_or_invalid_citations,omitted_current_evidence,unknown_evidence_reference",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "duplicate_or_invalid_citations,omitted_current_evidence,unknown_evidence_reference",
+          "latency_seconds": 0.5239013329846784,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 7,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 41206
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 301,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/3/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "The synthetic bridge reopened at 18:00 after inspections.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 302,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/3/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "El puente ficticio reabrió a las 18:00 después de las inspecciones.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "B1",
+      "category": "multilingual",
+      "question": "人工智能实验室有哪些新消息？",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "dab34b7c-d1d3-47e6-b23a-b46b5b42ae56",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/1/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/1/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/1/3]",
+        "claims": [
+          {
+            "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 101,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/1/1"
+            }
+          },
+          {
+            "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 102,
+              "publisher": "Authored Demo zh",
+              "url": "https://demo.example.org/1/2"
+            }
+          },
+          {
+            "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 103,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/1/3"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5417889590025879,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 32409
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "A1",
+      "category": "basic",
+      "question": "What happened at the AI laboratory?",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "7e67025a-ac5c-4efb-a8a2-c200e77f628d",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/1/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/1/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/1/3]",
+        "claims": [
+          {
+            "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 101,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/1/1"
+            }
+          },
+          {
+            "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 102,
+              "publisher": "Authored Demo zh",
+              "url": "https://demo.example.org/1/2"
+            }
+          },
+          {
+            "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 103,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/1/3"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.7603707499802113,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 32038
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "C3",
+      "category": "evolving",
+      "question": "桥梁现在是否已重新开放？",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "429e970f-d886-4f17-b735-0e5f2d339fcf",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic bridge reopened at 18:00 after inspections.\n[00000000-0000-0000-0000-000000000003 | Authored Demo en | https://demo.example.org/3/1]\n\nEl puente ficticio reabrió a las 18:00 después de las inspecciones.\n[00000000-0000-0000-0000-000000000003 | Authored Demo es | https://demo.example.org/3/2]",
+        "claims": [
+          {
+            "quote": "The synthetic bridge reopened at 18:00 after inspections.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000003",
+              "article_id": 301,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/3/1"
+            }
+          },
+          {
+            "quote": "El puente ficticio reabrió a las 18:00 después de las inspecciones.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000003",
+              "article_id": 302,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/3/2"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5453315409831703,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 30804
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 301,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/3/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "The synthetic bridge reopened at 18:00 after inspections.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 302,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/3/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "El puente ficticio reabrió a las 18:00 después de las inspecciones.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "C2",
+      "category": "evolving",
+      "question": "¿Cuál es la actualización del puente?",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "d02e2770-85ad-4b6f-ac46-583aa6e51cd8",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic bridge reopened at 18:00 after inspections.\n[00000000-0000-0000-0000-000000000003 | Authored Demo en | https://demo.example.org/3/1]\n\nEl puente ficticio reabrió a las 18:00 después de las inspecciones.\n[00000000-0000-0000-0000-000000000003 | Authored Demo es | https://demo.example.org/3/2]",
+        "claims": [
+          {
+            "quote": "The synthetic bridge reopened at 18:00 after inspections.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000003",
+              "article_id": 301,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/3/1"
+            }
+          },
+          {
+            "quote": "El puente ficticio reabrió a las 18:00 después de las inspecciones.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000003",
+              "article_id": 302,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/3/2"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5148877499741502,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 30646
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 301,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/3/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "The synthetic bridge reopened at 18:00 after inspections.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 302,
+          "event_id": "00000000-0000-0000-0000-000000000003",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/3/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic flood bridge reopening update",
+          "excerpt": "El puente ficticio reabrió a las 18:00 después de las inspecciones.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "G2",
+      "category": "citation",
+      "question": "Identify the orbital telescope event and its sources.",
+      "faults": {
+        "writer": "bad_event",
+        "verifier": "approve_all"
+      },
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "30749cc0-551f-4019-8d7b-ce14712214a1",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "fake",
+        "failure_category": "duplicate_or_invalid_citations,omitted_current_evidence,unknown_evidence_reference",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "duplicate_or_invalid_citations,omitted_current_evidence,unknown_evidence_reference",
+          "latency_seconds": 0.525082541978918,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 7,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 40670
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 201,
+          "event_id": "00000000-0000-0000-0000-000000000002",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/2/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic orbital telescope launch",
+          "excerpt": "The synthetic orbital telescope launched at 09:00 UTC.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 202,
+          "event_id": "00000000-0000-0000-0000-000000000002",
+          "publisher": "Authored Demo fr",
+          "url": "https://demo.example.org/2/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "fr",
+          "title": "Synthetic orbital telescope launch",
+          "excerpt": "Le télescope orbital fictif a été lancé à 09 h 00 UTC.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "B2",
+      "category": "multilingual",
+      "question": "¿Qué ocurrió en el laboratorio?",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "3cdc1954-d998-4022-a5db-614e5d78aee8",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/1/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/1/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/1/3]",
+        "claims": [
+          {
+            "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 101,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/1/1"
+            }
+          },
+          {
+            "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 102,
+              "publisher": "Authored Demo zh",
+              "url": "https://demo.example.org/1/2"
+            }
+          },
+          {
+            "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 103,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/1/3"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5213790420093574,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 32121
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "H2",
+      "category": "budget",
+      "question": "Retrieve every detail for all budget events.",
+      "faults": {
+        "researcher": "detail_overflow"
+      },
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "3bad8ee4-7d1d-47f7-8aba-df5cd63ac7b7",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": "event_detail_budget",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 0,
+          "failure_category": "event_detail_budget",
+          "latency_seconds": 0.5138217500061728,
+          "tool_calls": 6,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event",
+            "giim_get_event",
+            "giim_get_event",
+            "giim_get_event",
+            "giim_get_event"
+          ],
+          "model_calls": 2,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 5,
+          "conservative_token_reservation": 13701
+        }
+      },
+      "retrieved_evidence": [],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "A3",
+      "category": "basic",
+      "question": "What are the recent AI laboratory reports?",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "9ee48583-9e13-4296-9e7e-713dd964127f",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nThe synthetic AI laboratory opened on Tuesday with 24 research desks.\n[00000000-0000-0000-0000-000000000001 | Authored Demo en | https://demo.example.org/1/1]\n\n合成示例：人工智能实验室于周二开放，设有24个研究席位。\n[00000000-0000-0000-0000-000000000001 | Authored Demo zh | https://demo.example.org/1/2]\n\nEl laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\n[00000000-0000-0000-0000-000000000001 | Authored Demo es | https://demo.example.org/1/3]",
+        "claims": [
+          {
+            "quote": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 101,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/1/1"
+            }
+          },
+          {
+            "quote": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 102,
+              "publisher": "Authored Demo zh",
+              "url": "https://demo.example.org/1/2"
+            }
+          },
+          {
+            "quote": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000001",
+              "article_id": 103,
+              "publisher": "Authored Demo es",
+              "url": "https://demo.example.org/1/3"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "fake",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 0.5418925000121817,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 32087
+        }
+      },
+      "retrieved_evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T10:00:00+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    },
+    {
+      "id": "D1",
+      "category": "insufficient",
+      "question": "What is the unicorn stock price?",
+      "faults": {},
+      "passed": true,
+      "checks": {
+        "expected_status": true,
+        "citation_associations": true,
+        "expected_events": true,
+        "no_claims_on_refusal": true,
+        "tool_budget": true,
+        "revision_budget": true,
+        "failure_category": true,
+        "structured_output": true
+      },
+      "answer": {
+        "request_id": "2b40f80e-c7c6-4fa5-8b6d-7b77a5f5e69c",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "fake",
+        "failure_category": "missing_evidence,verifier_rejected",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "missing_evidence,verifier_rejected",
+          "latency_seconds": 0.49599220900563523,
+          "tool_calls": 1,
+          "tools": [
+            "giim_search_events"
+          ],
+          "model_calls": 6,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 1,
+          "detail_calls": 0,
+          "conservative_token_reservation": 27139
+        }
+      },
+      "retrieved_evidence": [],
+      "human_review": "NOT PERFORMED",
+      "human_rating": null,
+      "human_notes": null
+    }
+  ]
+}

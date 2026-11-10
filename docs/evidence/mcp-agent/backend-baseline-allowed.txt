@@ -1,0 +1,16 @@
+ Container giim-mcp-test-postgres Running
+ Container giim-mcp-test-qdrant Running
+ Container giim-mcp-test-postgres Waiting
+ Container giim-mcp-test-postgres Healthy
+ Container giim-mcp-test-api-run-0313405f2003 Creating
+ Container giim-mcp-test-api-run-0313405f2003 Created
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/test_pipeline_recovery.py::test_failed_pipeline_preserves_events_and_last_success
+  /usr/local/lib/python3.11/site-packages/structlog/_base.py:173: UserWarning: Remove `format_exc_info` from your processor chain if you want pretty exceptions.
+    event_dict = proc(self._logger, method_name, event_dict)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 2 deselected, 1 warning in 3.46s
+INFO:httpx:HTTP Request: GET http://qdrant:6333 "HTTP/1.1 200 OK"

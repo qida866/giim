@@ -49,3 +49,11 @@ No project code license is added automatically. Retaining the repository without
 The new documentation images use authored, explicitly synthetic UI data in a separate temporary database. They are actual browser captures of the existing frontend, not generated mockups or claims about real-world coverage. They avoid redistributing source articles and do not enter the evaluation corpus or existing application database.
 
 Development notes and `PROJECT_HANDOFF.md` remain in the local research repository and are excluded from the public release tree. Already-public development notes and author metadata remain in existing history, which this update does not rewrite.
+
+## Task 2 extension review — November 10, 2026
+
+The independent analyst environment adds MCP 2.3.0 (MIT), Google ADK 2.14.0 (Apache license in the installed distribution's LICENSE file), Google GenAI 2.34.0 (Apache-2.0), Pydantic 2.14.3 (MIT), httpx 0.28.1 / httpx2 2.16.0 (BSD-3-Clause), uvicorn 0.46.0 (BSD-3-Clause) and PyYAML 6.0.3 (MIT). This is a selected direct-dependency review, not a complete transitive license or vulnerability certification. The lock and [captured metadata](evidence/mcp-agent/sdk-metadata.json) record the tested versions. Preserve upstream notices when distributing images. No project license was added.
+
+Agent fixtures, evaluation cases and committed sample outputs use authored synthetic data only, including explicitly labeled adversarial instructions. No private Phase 3 source corpus or model weights are added. Real publisher excerpts default to withheld; an operator must configure reviewed per-publisher caps before using source content with a hosted model. Caps are not legal permission, and API-provider terms are separate from SDK licenses. Traces and ADK sessions stay ignored and private; reviewed synthetic evaluation exports are the intentional exception.
+
+MCP event-card summaries are withheld independently of the source excerpt setting because the upstream field may contain a publisher-text fallback without source-level permissions. A null summary and explicit policy reason prevent that field from bypassing excerpt limits; only separately authorized source excerpts can ground analyst output.
