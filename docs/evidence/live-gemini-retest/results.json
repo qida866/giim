@@ -1,0 +1,228 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "round": "retest-abc",
+  "results": [
+    {
+      "case": "A",
+      "question": "What happened at the synthetic AI laboratory? Find the event and cite its reports.",
+      "status": "BLOCKED",
+      "checks": {
+        "all_roles": true,
+        "real_model_usage": false,
+        "citations": true,
+        "complete_model_usage": false,
+        "verification_executed": false,
+        "mcp_retrieval": true,
+        "both_verifiers_approved": false,
+        "relevant_verified_answer": false
+      },
+      "answer": {
+        "request_id": "dc7de602-2ea8-4fc6-8693-4c0524111774",
+        "status": "error",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 0,
+        "mode": "gemini",
+        "failure_category": "execution_error",
+        "trace": {
+          "status": "error",
+          "verified": false,
+          "revisions": 0,
+          "failure_category": "execution_error",
+          "latency_seconds": 17.21499817498261,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 4,
+          "model_attempts": 5,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "estimated_cost_usd": null,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 38450
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ]
+    },
+    {
+      "case": "B",
+      "question": "查找描述同一人工智能实验室开放事件的不同语言报道，并引用各个来源。",
+      "status": "FAIL",
+      "checks": {
+        "all_roles": true,
+        "real_model_usage": true,
+        "citations": true,
+        "complete_model_usage": true,
+        "verification_executed": true,
+        "mcp_retrieval": true,
+        "both_verifiers_approved": false,
+        "relevant_verified_answer": false,
+        "languages": false
+      },
+      "answer": {
+        "request_id": "e4dc8e33-9e85-4574-b311-b9626e0dc40b",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "gemini",
+        "failure_category": "missing_uncertainty",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "missing_uncertainty",
+          "latency_seconds": 15.011637340998277,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 7,
+          "model_attempts": 7,
+          "input_tokens": 11886,
+          "output_tokens": 948,
+          "total_tokens": 12834,
+          "estimated_cost_usd": 0.0059358,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 53279
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ]
+    },
+    {
+      "case": "C",
+      "question": "What will happen to the stock market exactly 100 years from now?",
+      "status": "PASS",
+      "checks": {
+        "all_roles": true,
+        "real_model_usage": true,
+        "citations": true,
+        "complete_model_usage": true,
+        "verification_executed": true,
+        "refusal": true
+      },
+      "answer": {
+        "request_id": "362a986f-664c-49b3-bd56-adb269fe9696",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "gemini",
+        "failure_category": "missing_evidence",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "missing_evidence",
+          "latency_seconds": 11.277181339042727,
+          "tool_calls": 0,
+          "tools": [],
+          "model_calls": 5,
+          "model_attempts": 5,
+          "input_tokens": 1777,
+          "output_tokens": 129,
+          "total_tokens": 1906,
+          "estimated_cost_usd": 0.0008556,
+          "tool_rounds": 0,
+          "detail_calls": 0,
+          "conservative_token_reservation": 23554
+        }
+      },
+      "evidence": []
+    }
+  ],
+  "attempted_model_calls": 17,
+  "reserved_usd": 0.1169647,
+  "observed_estimated_usd": null,
+  "known_response_estimate_usd": 0.010043100000000001,
+  "unreported_model_attempts": 1
+}

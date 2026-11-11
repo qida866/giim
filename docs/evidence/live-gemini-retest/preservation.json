@@ -1,0 +1,8 @@
+{
+  "prior_reviewed_evidence_sha256_unchanged": true,
+  "normalized_event_responses_unchanged": {
+    "00000000-0000-0000-0000-000000000001": true,
+    "00000000-0000-0000-0000-000000000004": true
+  },
+  "method": "Compare full normalized MCP event responses before and after retest; not physical SQL snapshot equality."
+}

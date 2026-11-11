@@ -1,0 +1,238 @@
+[
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_627724019193345084",
+          "args": {
+            "query": "synthetic AI laboratory"
+          },
+          "name": "giim_search_events",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_9441241883152390200",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "name": "giim_get_event",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_4833978681524666528",
+          "args": {
+            "contradictions": false,
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000001"
+            ],
+            "notes": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "insufficient": false
+          },
+          "name": "set_model_response",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"claims\": [\n    {\n      \"quote\": \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 101,\n        \"publisher\": \"Authored Demo en\",\n        \"url\": \"https://demo.example.org/1/1\"\n      }\n    },\n    {\n      \"quote\": \"合成示例：人工智能实验室于周二开放，设有24个研究席位。\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 102,\n        \"publisher\": \"Authored Demo zh\",\n        \"url\": \"https://demo.example.org/1/2\"\n      }\n    },\n    {\n      \"quote\": \"El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 103,\n        \"publisher\": \"Authored Demo es\",\n        \"url\": \"https://demo.example.org/1/3\"\n      }\n    }\n  ],\n  \"acknowledge_uncertainty\": false\n}"
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "verifier",
+    "exception_type": "ServerError",
+    "http_status": 503,
+    "mentions_schema": false,
+    "mentions_format": false,
+    "mentions_additional_properties": false
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_12443225970927667596",
+          "args": {
+            "query": "人工智能实验室 开放"
+          },
+          "name": "giim_search_events",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_5718385408781598221",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "name": "giim_get_event",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_929259781847195431",
+          "args": {
+            "contradictions": false,
+            "notes": "成功检索到描述同一人工智能实验室开放事件的不同语言报道（英语、中文、西班牙语），报道均指出该实验室于周二开放，设有24个研究席位。",
+            "insufficient": false,
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000001"
+            ]
+          },
+          "name": "set_model_response",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"claims\": [\n    {\n      \"quote\": \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 101,\n        \"publisher\": \"Authored Demo en\",\n        \"url\": \"https://demo.example.org/1/1\"\n      }\n    },\n    {\n      \"quote\": \"合成示例：人工智能实验室于周二开放，设有24个研究席位。\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 102,\n        \"publisher\": \"Authored Demo zh\",\n        \"url\": \"https://demo.example.org/1/2\"\n      }\n    },\n    {\n      \"quote\": \"El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000001\",\n        \"article_id\": 103,\n        \"publisher\": \"Authored Demo es\",\n        \"url\": \"https://demo.example.org/1/3\"\n      }\n    }\n  ],\n  \"acknowledge_uncertainty\": false\n}"
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"ok\": true,\n  \"unsupported_claims\": [],\n  \"missing_citations\": []\n}"
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"claims\": [{\"quote\": \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 101, \"publisher\": \"Authored Demo en\", \"url\": \"https://demo.example.org/1/1\"}}, {\"quote\": \"合成示例：人工智能实验室于周二开放，设有24个研究席位。\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 102, \"publisher\": \"Authored Demo zh\", \"url\": \"https://demo.example.org/1/2\"}}, {\"quote\": \"El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 103, \"publisher\": \"Authored Demo es\", \"url\": \"https://demo.example.org/1/3\"}}], \"acknowledge_uncertainty\": false}"
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"ok\": true,\n  \"unsupported_claims\": [],\n  \"missing_citations\": []\n}"
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_785212163787693220",
+          "args": {
+            "insufficient": true,
+            "notes": "Predicting the stock market 100 years into the future is entirely speculative and impossible to know with factual certainty, as it involves future events beyond the scope of current information or historical record."
+          },
+          "name": "set_model_response",
+          "partial_args": null,
+          "will_continue": null
+        }
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"claims\": [],\n  \"acknowledge_uncertainty\": false\n}"
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"ok\": true, \"unsupported_claims\": [], \"missing_citations\": []}"
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"claims\": [], \"acknowledge_uncertainty\": false}"
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"ok\": true, \"unsupported_claims\": [], \"missing_citations\": []}"
+      }
+    ]
+  }
+]

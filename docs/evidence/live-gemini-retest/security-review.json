@@ -1,0 +1,8 @@
+{
+  "scope": "Tracked/unignored worktree files checked for exact available credential values and high-confidence key/private-key patterns. This is not a complete historical secret or licensing audit.",
+  "credential_regular_non_symlink": true,
+  "credential_mode": "0o600",
+  "credential_gitignored": true,
+  "finding_paths": [],
+  "live_evidence_content": "Only authored synthetic reports; thought signatures and thought parts omitted."
+}

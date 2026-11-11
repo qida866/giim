@@ -1,5 +1,7 @@
 # GIIM Task 2 — real Gemini integration report
 
+> Follow-up: the [approved A/B/C retest](TASK2_GEMINI_RETEST_REPORT.md) completed. C passed; A was blocked by HTTP 503 and B failed uncertainty compliance. The first-round evidence below is preserved. Overall, three of five original scenarios now have passing live evidence.
+
 **Result: 2 PASS, 3 FAIL across the five authorized workflows.** Real Gemini, Google ADK, MCP and GIIM's REST API completed the conflicting-evidence and adversarial-citation workflows. The first three workflows exposed implementation problems; fixes now pass local regression tests, but those scenarios have not been rerun with Gemini. Final-code live acceptance of normal research, cross-lingual answers and insufficient-evidence handling remains **BLOCKED pending a new authorization**. The five-workflow allowance is exhausted; no further live requests were made.
 
 Executed November 10, 2026 Pacific time (trace timestamps are November 11 UTC), on `feature/mcp-agent`, starting at `07218fbc9de95599780029ec33910b215d6a22f8`. Corrected implementation commit: `ee8e879bb2af503dd718964db6ed45d8e60d7660`. Documentation/evidence are committed afterward. This is an execution-based engineering report, not independent certification or evidence of production readiness.

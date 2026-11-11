@@ -1,0 +1,103 @@
+[
+  {
+    "case": "A",
+    "status": "BLOCKED",
+    "request_id": "dc7de602-2ea8-4fc6-8693-4c0524111774",
+    "model_attempts": 5,
+    "returned_responses": 4,
+    "mcp_calls": 2,
+    "latency_seconds": 17.21499817498261,
+    "reported_tokens": {
+      "input_tokens": 6239,
+      "output_tokens": 552,
+      "thinking_tokens": 0,
+      "total_tokens": 6791
+    },
+    "known_response_estimate_usd": 0.0032517,
+    "verification": []
+  },
+  {
+    "case": "B",
+    "status": "FAIL",
+    "request_id": "e4dc8e33-9e85-4574-b311-b9626e0dc40b",
+    "model_attempts": 7,
+    "returned_responses": 7,
+    "mcp_calls": 2,
+    "latency_seconds": 15.011637340998277,
+    "reported_tokens": {
+      "input_tokens": 11886,
+      "output_tokens": 948,
+      "thinking_tokens": 0,
+      "total_tokens": 12834
+    },
+    "known_response_estimate_usd": 0.0059358,
+    "verification": [
+      {
+        "request_id": "e4dc8e33-9e85-4574-b311-b9626e0dc40b",
+        "timestamp": "2026-11-11T06:17:15.345100+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": false,
+        "errors": [
+          "missing_uncertainty"
+        ],
+        "iteration": 0
+      },
+      {
+        "request_id": "e4dc8e33-9e85-4574-b311-b9626e0dc40b",
+        "timestamp": "2026-11-11T06:17:19.980749+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": false,
+        "errors": [
+          "missing_uncertainty"
+        ],
+        "iteration": 1
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "status": "PASS",
+    "request_id": "362a986f-664c-49b3-bd56-adb269fe9696",
+    "model_attempts": 5,
+    "returned_responses": 5,
+    "mcp_calls": 0,
+    "latency_seconds": 11.277181339042727,
+    "reported_tokens": {
+      "input_tokens": 1777,
+      "output_tokens": 129,
+      "thinking_tokens": 0,
+      "total_tokens": 1906
+    },
+    "known_response_estimate_usd": 0.0008556,
+    "verification": [
+      {
+        "request_id": "362a986f-664c-49b3-bd56-adb269fe9696",
+        "timestamp": "2026-11-11T06:19:33.693438+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": false,
+        "errors": [
+          "missing_evidence"
+        ],
+        "iteration": 0
+      },
+      {
+        "request_id": "362a986f-664c-49b3-bd56-adb269fe9696",
+        "timestamp": "2026-11-11T06:19:39.429675+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": false,
+        "errors": [
+          "missing_evidence"
+        ],
+        "iteration": 1
+      }
+    ]
+  }
+]

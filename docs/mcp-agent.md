@@ -2,7 +2,7 @@
 
 Task 2 adds independently installed, read-only components to the Phase 3 backend. It preserves bge-m3, Qdrant, clustering, event continuity, ingestion, the existing LLM publication client and the frontend. The default demonstration uses authored synthetic reports and a scripted ADK model; it makes no hosted model requests.
 
-The implementation and local validation report is [here](reports/mcp-agent-report.md). A subsequent [real Gemini trial](reports/TASK2_LIVE_GEMINI_REPORT.md) passed conflict-preserving citation and corrupted-citation refusal scenarios on authored data; three other scenarios failed and need live retesting after fixes. General live-model quality, deployment and human evaluation remain unverified. This is a conservative **extractive analyst**: final factual output consists of attributed, policy-limited current-source excerpts. It does not accept arbitrary generated factual prose.
+The implementation and local validation report is [here](reports/mcp-agent-report.md). A subsequent [real Gemini trial](reports/TASK2_LIVE_GEMINI_REPORT.md) passed conflict-preserving citation and corrupted-citation refusal scenarios on authored data; the subsequent [A/B/C retest](reports/TASK2_GEMINI_RETEST_REPORT.md) passed insufficient-evidence handling, but normal research was blocked by HTTP 503 and the cross-lingual answer failed uncertainty compliance. A/B still require passing live verification. General live-model quality, deployment and human evaluation remain unverified. This is a conservative **extractive analyst**: final factual output consists of attributed, policy-limited current-source excerpts. It does not accept arbitrary generated factual prose.
 
 ## Architecture and actual execution
 

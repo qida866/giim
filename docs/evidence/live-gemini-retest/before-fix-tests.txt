@@ -1,0 +1,16 @@
+All checks passed!
+47 files already formatted
+........................................................................ [ 54%]
+............................................................             [100%]
+=============================== warnings summary ===============================
+test_transport.py::test_authenticated_streamable_http_roundtrip
+  /usr/local/lib/python3.11/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+test_transport.py::test_authenticated_streamable_http_roundtrip
+  /usr/local/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+132 passed, 2 warnings in 27.47s
+No broken requirements found.

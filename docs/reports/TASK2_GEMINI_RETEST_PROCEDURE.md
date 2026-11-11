@@ -1,6 +1,6 @@
 # Task 2 — A/B/C live Gemini retest approval package
 
-**Status: prepared; awaiting explicit authorization. No additional Gemini calls were made during preparation.** Task 2 is not fully live-accepted. The first trial remains two passes and three failures; those records are preserved without reclassification.
+**Status: approved and executed.** See the [retest report](TASK2_GEMINI_RETEST_REPORT.md). The three planned attempts are consumed; do not rerun these commands without further authorization. No additional Gemini calls were made during the preparation recorded below. Task 2 is not fully live-accepted. The first trial remains two passes and three failures; those records are preserved without reclassification.
 
 ## Failure review and regression coverage
 
