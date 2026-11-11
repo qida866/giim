@@ -6,7 +6,7 @@ RUN pip install --no-cache-dir -r /app/requirements.lock \
     && useradd --uid 10001 --create-home analyst
 COPY apps/mcp_server /app/apps/mcp_server
 COPY apps/agent /app/apps/agent
-COPY scripts/summarize_runs.py scripts/sample_agent_evals.py /app/scripts/
+COPY scripts/summarize_runs.py scripts/sample_agent_evals.py scripts/live_gemini_trial.py /app/scripts/
 RUN pip install --no-cache-dir --no-build-isolation --no-deps /app/apps/mcp_server /app/apps/agent \
     && pip check && mkdir -p /app/.runs && chown -R analyst:analyst /app
 USER analyst

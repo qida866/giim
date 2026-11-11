@@ -32,6 +32,14 @@ class Hooks:
             ]
         llm_request.config.max_output_tokens = self.budget.limits.output_tokens
 
+        # Keep Pydantic validation in ADK/the Coordinator; send the documented JSON
+        # Schema wire field rather than the narrower legacy Google Schema dialect.
+        schema = llm_request.config.response_schema
+        if isinstance(schema, type) and issubclass(schema, BaseModel):
+            llm_request.config.response_json_schema = schema.model_json_schema()
+            llm_request.config.response_schema = None
+            llm_request.config.response_mime_type = "application/json"
+
         def encode_schema(value):
             if isinstance(value, type) and issubclass(value, BaseModel):
                 return value.model_json_schema()

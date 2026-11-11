@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import math
 import os
 from dataclasses import dataclass, field
 from importlib.metadata import version
@@ -128,13 +129,29 @@ class TrialModel(BaseLlm):
         llm_request.config.max_output_tokens = 2048
         llm_request.config.candidate_count = 1
         self.meter.reserve(llm_request)
-        async for response in self.delegate.generate_content_async(llm_request, stream=False):
-            self.meter.observe(response, self.role)
-            if self.corrupt and self.role == "writer":
-                self.records.append({"injected": corrupt_draft(response)})
-            # Full role payloads remain private, redacted at write time. No chain-of-thought requested.
-            self.records.append({"role": self.role, "response": response.model_dump(mode="json")})
-            yield response
+        try:
+            async for response in self.delegate.generate_content_async(llm_request, stream=False):
+                self.meter.observe(response, self.role)
+                if self.corrupt and self.role == "writer":
+                    self.records.append({"injected": corrupt_draft(response)})
+                # Full role payloads remain private, redacted at write time. No chain-of-thought requested.
+                self.records.append(
+                    {"role": self.role, "response": response.model_dump(mode="json")}
+                )
+                yield response
+        except Exception as exc:
+            diagnostic = {"role": self.role, "exception_type": type(exc).__name__}
+            code = getattr(exc, "code", None)
+            if isinstance(code, int):
+                diagnostic["http_status"] = code
+                message = str(exc).lower()
+                # Fixed booleans aid diagnosis without copying provider message text.
+                diagnostic["mentions_schema"] = "schema" in message
+                diagnostic["mentions_format"] = "format" in message
+                diagnostic["mentions_additional_properties"] = "additional" in message
+            # Exception messages/inputs may contain credentials or request text.
+            self.records.append(diagnostic)
+            raise
 
 
 def factory(meter, records, corrupt=False):
@@ -260,6 +277,49 @@ def checks(case, answer, evidence, events, records):
     return result
 
 
+def resume_state(path, carry_unreported=False):
+    """Continue only unattempted scenarios, carrying all prior spending forward."""
+    if path is None:
+        return Meter(), []
+    data = json.loads(path.read_text())
+    calls, reserved, measured = (
+        data["attempted_model_calls"],
+        data["reserved_usd"],
+        data["observed_estimated_usd"],
+    )
+    missing_usage = measured is None
+    if missing_usage and carry_unreported:
+        measured = data.get("known_response_estimate_usd")
+    if (
+        data["model"] != MODEL
+        or isinstance(calls, bool)
+        or not isinstance(calls, int)
+        or not 0 <= calls <= 50
+        or measured is None
+        or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0
+            for v in (reserved, measured)
+        )
+        or max(reserved, measured) >= 0.95
+    ):
+        raise SafetyError("trial_invalid_or_exhausted_resume_budget")
+    completed = [r for r in data["results"] if "answer" in r]
+    identifiers = [r["case"] for r in completed]
+    if len(identifiers) != len(set(identifiers)) or identifiers != [
+        c for c, _ in CASES[: len(completed)]
+    ]:
+        raise SafetyError("trial_invalid_resume_cases")
+    returned = sum(r["answer"]["trace"]["model_calls"] for r in completed)
+    if returned > calls or (returned != calls and not (carry_unreported and missing_usage)):
+        raise SafetyError("trial_incomplete_resume_usage")
+    return Meter(
+        calls=calls,
+        reserved_usd=reserved,
+        observed_usd=measured,
+        observations=[{} for _ in range(returned)],
+    ), completed
+
+
 async def run(args):
     if args.live and os.getenv("GIIM_LIVE_TRIAL_APPROVAL") == APPROVAL:
         credential = getattr(args, "credential_file", None)
@@ -273,6 +333,9 @@ async def run(args):
         raise SafetyError("trial_approval_and_private_credential_required")
     if args.api != "http://127.0.0.1:8000":
         raise SafetyError("trial_requires_isolated_container_network")
+    meter, results = resume_state(
+        getattr(args, "resume_from", None), getattr(args, "carry_unreported_reservation", False)
+    )
     settings = Settings(api_url=args.api, publisher_caps=CAPS)
     # mkdir is exclusive: rerunning an approved trial cannot silently add more paid work.
     args.output.mkdir(parents=True, mode=0o700, exist_ok=False)
@@ -291,8 +354,7 @@ async def run(args):
             "PASS: five actual API MCP tools and exact authored two-event dataset; zero model calls."
         )
         return 0
-    meter, results = Meter(), []
-    for case, question in CASES:
+    for case, question in CASES[len(results) :]:
         evidence, records = [], []
         answer = await ask(
             question,
@@ -335,6 +397,7 @@ async def run(args):
                 "reserved_usd": meter.reserved_usd,
                 "observed_estimated_usd": meter.estimated_usd,
                 "known_response_estimate_usd": meter.observed_usd,
+                "unreported_model_attempts": meter.calls - len(meter.observations),
             },
         )
         print(f"{case}: {status}; estimated cumulative USD {meter.estimated_usd}")
@@ -357,6 +420,7 @@ async def run(args):
                     "reserved_usd": meter.reserved_usd,
                     "observed_estimated_usd": meter.estimated_usd,
                     "known_response_estimate_usd": meter.observed_usd,
+                    "unreported_model_attempts": meter.calls - len(meter.observations),
                 },
             )
             return 1
@@ -369,6 +433,14 @@ if __name__ == "__main__":
     mode.add_argument("--preflight", action="store_true")
     mode.add_argument("--live", action="store_true")
     parser.add_argument("--credential-file", type=Path)
+    parser.add_argument(
+        "--carry-unreported-reservation",
+        action="store_true",
+        help="After investigation, retain full prior reservations for unreported attempts; never treat them as free",
+    )
+    parser.add_argument(
+        "--resume-from", type=Path, help="Previous results; only unattempted workflows may run"
+    )
     parser.add_argument("--api", default="http://127.0.0.1:8000")
     parser.add_argument("--output", type=Path, required=True)
     configure_logging()

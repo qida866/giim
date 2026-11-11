@@ -1,10 +1,10 @@
 """研究、草稿、审查与最终响应契约。"""
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 from giim_mcp.models import ArticleID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, WithJsonSchema, field_serializer
 
 
 class StrictModel(BaseModel):
@@ -17,12 +17,23 @@ class ResearchBundle(StrictModel):
     contradictions: bool = False
     notes: str = Field(default="", max_length=1000)
 
+    @field_serializer("event_ids")
+    def serialize_event_ids(self, values: list[UUID]) -> list[str]:
+        # ADK's terminal response tool uses model_dump() then json.dumps().
+        # Keep UUID validation/internal values while making that boundary JSON-safe.
+        return [str(value) for value in values]
+
 
 class Citation(StrictModel):
     event_id: UUID
-    article_id: ArticleID
+    # Google GenAI rejects exclusiveMinimum; minimum=1 is equivalent for strict integers.
+    article_id: Annotated[ArticleID, WithJsonSchema({"type": "integer", "minimum": 1})]
     publisher: str = Field(min_length=1, max_length=200)
     url: str = Field(min_length=1, max_length=2000)
+
+    @field_serializer("event_id")
+    def serialize_event_id(self, value: UUID) -> str:
+        return str(value)
 
 
 class Claim(StrictModel):

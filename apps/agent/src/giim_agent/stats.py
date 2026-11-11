@@ -2,6 +2,7 @@
 
 import json
 import math
+from collections import Counter
 from pathlib import Path
 from statistics import mean
 
@@ -13,6 +14,8 @@ def numeric(value) -> bool:
 def summarize(directory: Path) -> dict:
     requests, complete = set(), {}
     malformed = 0
+    starts, returned = Counter(), Counter()
+    known_costs = []
     for path in directory.glob("*.jsonl"):
         with path.open() as stream:
             for line in stream:
@@ -22,10 +25,33 @@ def summarize(directory: Path) -> dict:
                     if not isinstance(key, str):
                         raise ValueError("invalid ID")
                     requests.add(key)
+                    if row.get("kind") == "model_start":
+                        starts[key] += 1
+                    elif row.get("kind") == "model":
+                        returned[key] += 1
+                        if numeric(row.get("estimated_cost_usd")):
+                            known_costs.append(row["estimated_cost_usd"])
                     if row.get("kind") == "complete":
                         complete[key] = row
                 except (ValueError, TypeError, KeyError):
                     malformed += 1
+    missing = {key: starts[key] - returned[key] for key in starts if starts[key] > returned[key]}
+    # Older complete events summed successful responses despite later failed attempts.
+    # Correct their aggregates without altering historical JSONL evidence.
+    for key in missing:
+        if key in complete:
+            complete[key] = {
+                **complete[key],
+                **{
+                    field: None
+                    for field in (
+                        "input_tokens",
+                        "output_tokens",
+                        "total_tokens",
+                        "estimated_cost_usd",
+                    )
+                },
+            }
     rows = list(complete.values())
 
     def values(key):
@@ -49,6 +75,11 @@ def summarize(directory: Path) -> dict:
     ]
     return {
         "total_requests": len(requests),
+        "unreported_model_attempts": sum(missing.values()),
+        "known_response_estimate_usd": sum(known_costs) if known_costs else None,
+        "total_estimated_cost_usd": sum(values("estimated_cost_usd"))
+        if rows and len(values("estimated_cost_usd")) == len(rows)
+        else None,
         "completed_requests": len(rows),
         "incomplete_requests": len(requests - set(complete)),
         "malformed_lines": malformed,

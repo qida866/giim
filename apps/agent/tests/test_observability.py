@@ -118,3 +118,38 @@ def test_third_party_logs_do_not_print_secret_or_exception(tmp_path, monkeypatch
         logger.removeHandler(handler)
     assert "test-only-sensitive-canary" not in output.getvalue()
     assert "[REDACTED]" in output.getvalue() and "Traceback" not in output.getvalue()
+
+
+def test_failed_attempt_does_not_turn_partial_usage_into_total_cost(tmp_path):
+    import json
+    from giim_agent.stats import summarize
+
+    trace = Trace(
+        "Authored question",
+        "fake",
+        tmp_path,
+        {"test": {"input_per_million": 2, "output_per_million": 4}},
+    )
+    trace.emit("model_start", role="researcher", model="test")
+    trace.model(
+        "researcher",
+        "test",
+        0.1,
+        GenerateContentResponseUsageMetadata(
+            prompt_token_count=100, candidates_token_count=20, total_token_count=120
+        ),
+    )
+    trace.emit("model_start", role="writer", model="test")
+    result = trace.finish("error", False, 0, "execution_error")
+    assert result["model_calls"] == 1 and result["model_attempts"] == 2
+    assert result["estimated_cost_usd"] is None and result["total_tokens"] is None
+    # Reproduce historical partially-priced complete events; reader must not trust them.
+    path = tmp_path / (trace.request_id + ".jsonl")
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    rows[-1].update(estimated_cost_usd=0.00028, total_tokens=120)
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    summary = summarize(tmp_path)
+    assert summary["priced_requests"] == 0 and summary["measured_token_requests"] == 0
+    assert summary["unreported_model_attempts"] == 1
+    assert summary["known_response_estimate_usd"] == pytest.approx(0.00028)
+    assert summary["total_estimated_cost_usd"] is None

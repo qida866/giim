@@ -177,3 +177,92 @@ async def test_trial_wrapper_through_adk_mcp_without_network_provider(
         assert "unknown_evidence_reference" in result.failure_category
     else:
         assert len(result.claims) == 3
+
+
+def test_resume_retains_budget_and_never_repeats_completed_workflows(tmp_path):
+    prior = {
+        "model": trial.MODEL,
+        "attempted_model_calls": 3,
+        "reserved_usd": 0.0224001,
+        "observed_estimated_usd": 0.0019991,
+        "results": [
+            {"case": "A", "answer": {"trace": {"model_calls": 3}}},
+            {"case": "B", "status": "BLOCKED"},
+        ],
+    }
+    path = tmp_path / "results.json"
+    path.write_text(json.dumps(prior))
+    meter, completed = trial.resume_state(path)
+    assert meter.calls == 3 and meter.reserved_usd == 0.0224001
+    assert meter.estimated_usd == 0.0019991
+    assert [r["case"] for r in completed] == ["A"]
+    assert [case for case, _ in trial.CASES[len(completed) :]] == list("BCDE")
+    meter.calls = 50
+    with pytest.raises(SafetyError, match="trial_budget"):
+        meter.reserve(request())
+    for key, value in [
+        ("observed_estimated_usd", None),
+        ("reserved_usd", 0.95),
+        ("attempted_model_calls", 51),
+        ("reserved_usd", float("nan")),
+    ]:
+        invalid = {**prior, key: value}
+        path.write_text(json.dumps(invalid))
+        with pytest.raises(SafetyError):
+            trial.resume_state(path)
+
+
+def test_investigated_unreported_attempt_keeps_full_reservation_and_unknown_cost(tmp_path):
+    prior = {
+        "model": trial.MODEL,
+        "attempted_model_calls": 7,
+        "reserved_usd": 0.0517271,
+        "observed_estimated_usd": None,
+        "known_response_estimate_usd": 0.0040313,
+        "results": [
+            {"case": "A", "answer": {"trace": {"model_calls": 3}}},
+            {"case": "B", "answer": {"trace": {"model_calls": 3}}},
+        ],
+    }
+    path = tmp_path / "results.json"
+    path.write_text(json.dumps(prior))
+    with pytest.raises(SafetyError):
+        trial.resume_state(path)
+    meter, completed = trial.resume_state(path, carry_unreported=True)
+    assert meter.calls == 7 and meter.reserved_usd == 0.0517271
+    assert meter.observed_usd == 0.0040313 and meter.estimated_usd is None
+    assert [case for case, _ in trial.CASES[len(completed) :]] == list("CDE")
+    meter.reserve(request())
+    meter.observe(
+        LlmResponse(
+            usage_metadata=types.GenerateContentResponseUsageMetadata(
+                prompt_token_count=100, candidates_token_count=20
+            )
+        ),
+        "writer",
+    )
+    assert meter.calls == 8 and meter.estimated_usd is None
+    assert meter.reserved_usd > 0.0517271
+
+
+async def test_provider_diagnostics_never_store_exception_message():
+    from google.adk.models.base_llm import BaseLlm
+
+    class Failing(BaseLlm):
+        async def generate_content_async(self, llm_request, stream=False):
+            raise ValueError("private-exception-canary")
+            yield
+
+    records = []
+    model = trial.TrialModel(
+        model=trial.MODEL,
+        delegate=Failing(model=trial.MODEL),
+        role="writer",
+        meter=trial.Meter(),
+        records=records,
+    )
+    with pytest.raises(ValueError):
+        async for _ in model.generate_content_async(request()):
+            pass
+    assert records == [{"role": "writer", "exception_type": "ValueError"}]
+    assert "private-exception-canary" not in json.dumps(records)

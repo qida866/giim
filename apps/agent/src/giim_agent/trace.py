@@ -69,11 +69,14 @@ class Trace:
     ) -> dict:
         models = [e for e in self.events if e["kind"] == "model"]
         tools = [e for e in self.events if e["kind"] == "tool"]
+        attempts = max(len(models), sum(e["kind"] == "model_start" for e in self.events))
 
         def complete_sum(key):
             return (
                 sum(e[key] for e in models)
-                if models and all(e.get(key) is not None for e in models)
+                if models
+                and attempts == len(models)
+                and all(e.get(key) is not None for e in models)
                 else None
             )
 
@@ -86,6 +89,7 @@ class Trace:
             "tool_calls": len(tools),
             "tools": [e["tool"] for e in tools],
             "model_calls": len(models),
+            "model_attempts": attempts,
             "input_tokens": complete_sum("input_tokens"),
             "output_tokens": complete_sum("output_tokens"),
             "total_tokens": complete_sum("total_tokens"),
