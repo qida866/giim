@@ -1,0 +1,144 @@
+[
+  {
+    "case": "A",
+    "status": "PASS",
+    "request_id": "3a9e902b-88ad-4bfe-a59f-c557369a352a",
+    "trace": {
+      "status": "verified",
+      "verified": true,
+      "revisions": 0,
+      "failure_category": null,
+      "latency_seconds": 19.66647900902899,
+      "tool_calls": 2,
+      "tools": [
+        "giim_search_events",
+        "giim_get_event"
+      ],
+      "model_calls": 5,
+      "model_attempts": 5,
+      "provider_errors": 0,
+      "retry_attempts": 0,
+      "provider_recoveries": 0,
+      "input_tokens": 7864,
+      "output_tokens": 579,
+      "total_tokens": 8443,
+      "estimated_cost_usd": 0.0038067,
+      "tool_rounds": 2,
+      "detail_calls": 1,
+      "conservative_token_reservation": 40237
+    },
+    "by_role": {
+      "researcher": {
+        "calls": 3,
+        "input_tokens": 5322,
+        "output_tokens": 161,
+        "thinking_tokens": 0,
+        "total_tokens": 5483,
+        "estimated_cost_usd": 0.0019991,
+        "model_latency_seconds": 10.748977753974032
+      },
+      "writer": {
+        "calls": 1,
+        "input_tokens": 1090,
+        "output_tokens": 391,
+        "thinking_tokens": 0,
+        "total_tokens": 1481,
+        "estimated_cost_usd": 0.0013045,
+        "model_latency_seconds": 4.195497084991075
+      },
+      "verifier": {
+        "calls": 1,
+        "input_tokens": 1452,
+        "output_tokens": 27,
+        "thinking_tokens": 0,
+        "total_tokens": 1479,
+        "estimated_cost_usd": 0.0005030999999999999,
+        "model_latency_seconds": 4.014833709981758
+      }
+    },
+    "writer_explicit_uncertainty": true,
+    "verification": [
+      {
+        "request_id": "3a9e902b-88ad-4bfe-a59f-c557369a352a",
+        "timestamp": "2026-11-11T20:19:05.232334+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": true,
+        "errors": [],
+        "iteration": 0
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "status": "PASS",
+    "request_id": "70956173-ff13-4db8-ae2c-8e94130e7cbe",
+    "trace": {
+      "status": "verified",
+      "verified": true,
+      "revisions": 0,
+      "failure_category": null,
+      "latency_seconds": 16.97036242496688,
+      "tool_calls": 2,
+      "tools": [
+        "giim_search_events",
+        "giim_get_event"
+      ],
+      "model_calls": 5,
+      "model_attempts": 5,
+      "provider_errors": 0,
+      "retry_attempts": 0,
+      "provider_recoveries": 0,
+      "input_tokens": 8636,
+      "output_tokens": 581,
+      "total_tokens": 9217,
+      "estimated_cost_usd": 0.0040433,
+      "tool_rounds": 2,
+      "detail_calls": 1,
+      "conservative_token_reservation": 41405
+    },
+    "by_role": {
+      "researcher": {
+        "calls": 3,
+        "input_tokens": 5326,
+        "output_tokens": 171,
+        "thinking_tokens": 0,
+        "total_tokens": 5497,
+        "estimated_cost_usd": 0.0020253,
+        "model_latency_seconds": 9.121842755004764
+      },
+      "writer": {
+        "calls": 1,
+        "input_tokens": 1474,
+        "output_tokens": 391,
+        "thinking_tokens": 0,
+        "total_tokens": 1865,
+        "estimated_cost_usd": 0.0014197,
+        "model_latency_seconds": 3.6662557939998806
+      },
+      "verifier": {
+        "calls": 1,
+        "input_tokens": 1836,
+        "output_tokens": 19,
+        "thinking_tokens": 0,
+        "total_tokens": 1855,
+        "estimated_cost_usd": 0.0005983,
+        "model_latency_seconds": 3.49221087701153
+      }
+    },
+    "writer_explicit_uncertainty": true,
+    "verification": [
+      {
+        "request_id": "70956173-ff13-4db8-ae2c-8e94130e7cbe",
+        "timestamp": "2026-11-11T20:19:22.206665+00:00",
+        "kind": "verification",
+        "role": "coordinator",
+        "model_ok": true,
+        "deterministic_ok": true,
+        "errors": [],
+        "iteration": 0
+      }
+    ]
+  }
+]

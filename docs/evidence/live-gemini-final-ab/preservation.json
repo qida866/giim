@@ -1,0 +1,51 @@
+{
+  "previous_evidence_sha256": {
+    "docs/evidence/live-gemini/data-preservation.json": "4502d4a8554af0cb649a99c65d0c74e8e0bb97a1a8712bd4c8082bb99fa16de4",
+    "docs/evidence/live-gemini/role-responses.json": "88e60e784cb78137e68e1890327ded1961f29e0733c9b9f455f7e0b7073ddad7",
+    "docs/evidence/live-gemini/installed-regressions.txt": "e2483ce7d48692e33b7c74d5073799d36a8857f618368cc62e473f8ec8a0f641",
+    "docs/evidence/live-gemini/mocked-evaluation.json": "cc25c9d743aa3826435e1c8acf9b86dfb586f83a58de8e91949da3041e455209",
+    "docs/evidence/live-gemini/commands.md": "f1978331f504d6652848b3288450a72dda3e9e03b5f31cbadbac966309712436",
+    "docs/evidence/live-gemini/results.json": "03db9d51280f645172e6996a8ab1119b35a4da2f5ee3d6f9408fdf9a32883413",
+    "docs/evidence/live-gemini/structured-before.txt": "0c56c52612c228cb438e8535616306a1a8567c748f56b2147aebae8b2303d85f",
+    "docs/evidence/live-gemini/final-regressions.txt": "ec0a1d46a541df1c0fed08eaf040dd4fcfce874ce777afc67f451ea564665a09",
+    "docs/evidence/live-gemini/traces.jsonl": "19a63ec9eb4f21a2c572e99eaeb9da9f0ea5b5f9305d1c7bc925154d8076a38f",
+    "docs/evidence/live-gemini/fix-targeted-final.txt": "a5b1ed40dfd1c7f4d5549e942d7a89b1832eb87ef9a6410443cc3f74e4c7b22f",
+    "docs/evidence/live-gemini/security-review.json": "79f5da2f72733a7ad16f7bd5ea215eb01211e278e41ede4b1106828894a7e0e8",
+    "docs/evidence/live-gemini/trace-summary.json": "52fdbdf3fa3e0c4db0ac5f14a097ad6298f91bbd5eaf832a8de8cf1c995a94be",
+    "docs/evidence/live-gemini/writer-schema-before.txt": "9e6dfb7f5850aa277da3187c5adec6c304df1bab6573253e863a8fdf29e1528d",
+    "docs/evidence/live-gemini-retest/metrics.json": "bb7dc76e025cf187127db74d1fbfa1e328afda5ac461551c388722c4f2a7b188",
+    "docs/evidence/live-gemini-retest/role-responses.json": "e35441ecec68a9ce3b5bb1e4834d53977f278e8fe96255c21df7c4feb30ec970",
+    "docs/evidence/live-gemini-retest/commands.md": "9cb0d99908dbb7e3ca30c457d4243f2e27643832c197523324ddbec23442592c",
+    "docs/evidence/live-gemini-retest/results.json": "33e886dd088febde95b13e6aa101f7266a32cb4df5f50c18fe27c4bda56aa491",
+    "docs/evidence/live-gemini-retest/preservation.json": "4d03d714a322ce39178b1859194047d8cd7f4db0e0160817a01570285e62a10e",
+    "docs/evidence/live-gemini-retest/traces.jsonl": "591aa4a372fbd847a087b918dfcac8646b75c3c0a9f9fa5f5166ee1f07f5c26a",
+    "docs/evidence/live-gemini-retest/before-fix-tests.txt": "c6e4dbb80ec5089b4c0fab7789138037045ac82131a95627df0999eb1d5c9742",
+    "docs/evidence/live-gemini-retest/security-review.json": "0a739780966945ef120deed0309bd9be7442f53ac884f0138f6ee0e40b4ecff3",
+    "docs/evidence/live-gemini-retest/trace-summary.json": "bb86b1864bb294fdc1c26c6b9fc64926ee90d888c0dd0028e08bdd1bc9d2be28",
+    "docs/evidence/live-gemini-retest/after-fix-tests.txt": "0062406d3a18394260a328389dfee1edf010182bf55cec8c3f5e07ad8e18373e",
+    "docs/evidence/live-gemini-retest-preparation/preserved-evidence.json": "fd33c6a0c7810fb2a66a5508c2953b2e490c32d0dad0112ea66a0b45fac57094",
+    "docs/evidence/live-gemini-retest-preparation/component-tests.txt": "5b50f6bbd9ed610d6ac03bb49625891889abf653abbfeeba8df03f9c8a5747f9",
+    "docs/evidence/live-gemini-retest-preparation/preflight.json": "92c2acf1a73c48a738a8547fd5600b9278a9fca29e261f9310cd9c230f8d13df",
+    "docs/evidence/live-gemini-retest-preparation/backend-tests.txt": "fd79f9130166967f93a93d8fff5c0984ca34ec7893731a7dc6d021edc0bb4bbe",
+    "docs/evidence/ab-reliability/installed-tests.txt": "3d302b05df2313a3709f0e2c4e1656dfadd64269699d6423beace09239dc9de8",
+    "docs/evidence/ab-reliability/commands.md": "2e63ac6ba12fb4c092f27f90e7d5886b63433d1e833e92d1bc5e61b066ab091b",
+    "docs/evidence/ab-reliability/preservation.json": "422c62d15f308dc666a370f2fe872533c5f6b2e36c3932e60a01a8d72068e6f7",
+    "docs/evidence/ab-reliability/final-regressions.txt": "215e1a4b29e6911d404b23bbbe84c54bac2bb2b1ea6f18561d202ba899e5c9b7",
+    "docs/evidence/ab-reliability/security-review.json": "1c06acaecfd1233e537a15886567c1d5f261f57c9a59363576479bee626abdac",
+    "docs/evidence/ab-reliability/preflight.json": "efcbd24eec033617427f755dfdef1812093d9bfdae31b4375f9445f9ca32a015",
+    "docs/evidence/ab-reliability/evaluation.json": "11a034e2209b53c04ac77b15decba6c3bb09095e4ae53f9779c12fa8e61e7fae",
+    "docs/evidence/ab-reliability/backend-tests.txt": "c65397291dcce7cbb128f442bbf5ca86fd14c78c079ee6e66af04d4b1f7976cb"
+  },
+  "historical_manifest_matches": true,
+  "authored_event_detail_unchanged": {
+    "00000000-0000-0000-0000-000000000001": true,
+    "00000000-0000-0000-0000-000000000004": true
+  },
+  "scope": "Normalized complete MCP event-detail data, not physical database snapshots; isolated fixtures only. No data reseeding or application writes.",
+  "refs_at_live_execution": {
+    "HEAD": "cc080291c502ac31a7f7800e43358f9f96231e81",
+    "main": "28edc62816d44254d7b5b532beaeec421762bb34",
+    "feature/gcp-deploy": "4e7b93135432d1885083822c764b8ac4c8d9feb7"
+  },
+  "runtime_code_unchanged_since_live_execution": true
+}

@@ -1,6 +1,6 @@
-# Task 2 — A/B reliability fixes and proposed live verification
+# Task 2 — A/B reliability fixes and historical live proposal
 
-**Status: local implementation complete; new live A/B verification awaits explicit approval. No new Gemini API calls were made.** Historical live acceptance remains three of five scenarios passing: C/D/E passed, A was blocked by HTTP 503, and B failed the uncertainty gate. Those records are preserved. These changes do not establish a new real-model pass or production readiness.
+**Follow-up: the authorized final A/B round has now executed and both passed.** See [final live acceptance](TASK2_FINAL_LIVE_ACCEPTANCE_REPORT.md): ten calls, $0.00785 estimated, explicit uncertainty and valid citations. No transient error occurred, so live retry recovery remains unobserved. All five original scenarios have passing evidence across rounds. The remainder preserves the preparation report and unexecuted-at-that-time proposal; statements that live approval/testing is pending describe that historical stage.
 
 Date: November 11, 2026 (America/Los_Angeles). Branch: `feature/mcp-agent`. Tested implementation commit: `83cd939ab49daebd3b1f0709b576e7fd0e0656ae`. The existing GIIM architecture, bge-m3, ingestion, clustering, search, databases and frontend are preserved.
 

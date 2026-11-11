@@ -1,0 +1,9 @@
+{
+  "scope": "Tracked/unignored worktree files checked for exact private Gemini-key/fixture-password values and high-confidence Google key, GitHub token and private-key patterns; not a full history or licensing audit. No secret values printed or persisted by the scan.",
+  "credential_regular_non_symlink": true,
+  "credential_mode": "0o600",
+  "credential_gitignored": true,
+  "finding_paths": [],
+  "scanned_file_count": 334,
+  "live_evidence_content": "Authored synthetic source reports only. Observable text/function calls preserved; hidden thought parts and signatures excluded."
+}

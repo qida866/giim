@@ -1,0 +1,44 @@
+{
+  "decision": "Five original controlled scenarios have passing real-model evidence across staged runs and different code revisions; not a fresh five-scenario run or general quality benchmark.",
+  "cases": [
+    {
+      "case": "A",
+      "status": "PASS",
+      "request_id": "3a9e902b-88ad-4bfe-a59f-c557369a352a",
+      "source": "live-gemini-final-ab/results.json",
+      "newly_executed": true
+    },
+    {
+      "case": "B",
+      "status": "PASS",
+      "request_id": "70956173-ff13-4db8-ae2c-8e94130e7cbe",
+      "source": "live-gemini-final-ab/results.json",
+      "newly_executed": true
+    },
+    {
+      "case": "C",
+      "status": "PASS",
+      "request_id": "362a986f-664c-49b3-bd56-adb269fe9696",
+      "source": "live-gemini-retest/results.json",
+      "newly_executed": false
+    },
+    {
+      "case": "D",
+      "status": "PASS",
+      "request_id": "502793b8-389f-4c06-b637-6718fca5bda5",
+      "source": "live-gemini/results.json",
+      "newly_executed": false
+    },
+    {
+      "case": "E",
+      "status": "PASS",
+      "request_id": "311da00e-e671-42b5-b0fc-73d9923b81b8",
+      "source": "live-gemini/results.json",
+      "newly_executed": false
+    }
+  ],
+  "final_round_attempts": 10,
+  "final_round_estimated_usd": 0.00785,
+  "live_retry_recovery_observed": false,
+  "local_retry_regressions_passed": true
+}

@@ -1,6 +1,6 @@
 # GIIM Task 2 engineering report
 
-**Latest reliability follow-up:** [A/B retry and uncertainty fixes](TASK2_AB_RELIABILITY_REPORT.md) passed 175 local component tests and 130 backend regressions. New live A/B verification awaits approval; historical live acceptance remains three of five.
+**Latest live acceptance follow-up:** [Final A/B verification](TASK2_FINAL_LIVE_ACCEPTANCE_REPORT.md) passed both remaining workflows with ten Gemini calls and $0.00785 estimated. All five original controlled scenarios now have passing real-model evidence across preserved rounds. Post-run checks passed 175 component and 130 backend tests. Live 503 recovery was not exercised; its bounded retry behavior passed local tests. The implementation report below is historical, including its original live-verification blockers.
 
 **Follow-up acceptance audit:** see [TASK2_ACCEPTANCE_REPORT.md](TASK2_ACCEPTANCE_REPORT.md) for fresh executions, the irrelevant-evidence bug found in the fake Verifier, its fix, and the expanded 107-test result. This original implementation report remains a dated record of its stated commit and must not supersede the acceptance findings.
 
