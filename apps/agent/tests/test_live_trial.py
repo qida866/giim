@@ -354,3 +354,129 @@ async def test_retest_dispatches_only_abc_and_preserves_existing_outputs(monkeyp
     with pytest.raises(FileExistsError):
         await trial.run(args)
     assert len(called) == 3 and (args.output / "results.json").read_bytes() == saved
+
+
+@pytest.mark.parametrize("cap", ["none", "calls", "cost"])
+async def test_provider_retries_share_trial_cost_and_call_meter(monkeypatch, cap):
+    from google.genai.errors import ServerError
+    from giim_agent.retry import RetryingModel
+    from giim_agent.budget import Budget, Limits
+    from giim_agent.trace import Trace
+    from giim_agent.hooks import Hooks
+    from types import SimpleNamespace
+
+    class TemporaryProvider(trial.BaseLlm):
+        calls: int = 0
+
+        async def generate_content_async(self, request, stream=False):
+            self.calls += 1
+            if self.calls == 1:
+                raise ServerError(503, {"error": {"message": "do-not-log-provider-body"}})
+            yield LlmResponse(
+                usage_metadata=types.GenerateContentResponseUsageMetadata(
+                    prompt_token_count=100, candidates_token_count=20, total_token_count=120
+                )
+            )
+
+    async def immediate(delay):
+        pass
+
+    monkeypatch.setattr("giim_agent.retry.asyncio.sleep", immediate)
+    meter = trial.Meter(max_calls=1 if cap == "calls" else 20, max_usd=0.20)
+    provider = TemporaryProvider(model=trial.MODEL)
+    inner = trial.TrialModel(
+        model=trial.MODEL, delegate=provider, role="writer", meter=meter, records=[]
+    )
+    budget, trace = Budget(Limits()), Trace("authored", "fake")
+    wrapped = RetryingModel(
+        model=trial.MODEL, delegate=inner, role="writer", budget=budget, trace=trace
+    )
+    req = request()
+    await Hooks(budget, trace).before(SimpleNamespace(agent_name="writer", state={}), req)
+    if cap == "cost":
+        preview = trial.Meter()
+        preview.reserve(req)
+        # First fits, second does not; failed attempt must retain its full reservation.
+        meter.max_usd = preview.reserved_usd * 1.5
+    if cap == "none":
+        responses = [r async for r in wrapped.generate_content_async(req)]
+        assert len(responses) == 1 and provider.calls == meter.calls == 2
+        assert meter.observed_usd > 0 and meter.estimated_usd is None
+    else:
+        with pytest.raises(SafetyError, match="trial_budget"):
+            _ = [r async for r in wrapped.generate_content_async(req)]
+        assert provider.calls == meter.calls == 1 and meter.estimated_usd is None
+    assert 0 < meter.reserved_usd < meter.max_usd
+
+
+async def test_ab_profile_requires_new_approval_and_excludes_other_cases(monkeypatch, tmp_path):
+    from argparse import Namespace
+
+    approval, calls, ceiling, cases = trial.round_config("retest-ab")
+    assert [c for c, _ in cases] == list("AB") and (calls, ceiling) == (20, 0.20)
+    assert approval not in (trial.APPROVAL, trial.RETEST_APPROVAL)
+    meter, done = trial.resume_state(None, round_name="retest-ab")
+    assert not done and (meter.max_calls, meter.max_usd) == (20, 0.20)
+    monkeypatch.setenv("GIIM_LIVE_TRIAL_APPROVAL", trial.RETEST_APPROVAL)
+    with pytest.raises(SafetyError, match="trial_approval"):
+        await trial.run(Namespace(live=True, round="retest-ab", output=tmp_path / "unused"))
+    assert not (tmp_path / "unused").exists()
+
+
+async def test_recovered_trial_keeps_unknown_cost_but_requires_verified_answer(
+    monkeypatch, settings, tmp_path
+):
+    from google.genai.errors import ServerError
+    from giim_agent.fake import FakeModel
+    from giim_agent.runtime import ask
+
+    class UsageProvider(FakeModel):
+        calls: int = 0
+
+        async def generate_content_async(self, request, stream=False):
+            self.calls += 1
+            if self.role == "verifier" and self.calls == 1:
+                raise ServerError(503, {"error": {"message": "synthetic transient"}})
+            async for reply in super().generate_content_async(request, stream):
+                reply.usage_metadata = types.GenerateContentResponseUsageMetadata(
+                    prompt_token_count=100, candidates_token_count=20, total_token_count=120
+                )
+                yield reply
+
+    async def immediate(delay):
+        pass
+
+    monkeypatch.setattr("giim_agent.retry.asyncio.sleep", immediate)
+    meter, records, evidence = trial.Meter(max_calls=20, max_usd=0.20), [], []
+
+    def factory(role, live, override, fault):
+        return trial.TrialModel(
+            model=trial.MODEL,
+            role=role,
+            meter=meter,
+            records=records,
+            delegate=UsageProvider(role=role, model=trial.MODEL),
+        )
+
+    answer = await ask(
+        "AI laboratory",
+        live=True,
+        settings=settings,
+        model=trial.MODEL,
+        model_factory=factory,
+        prices=trial.PRICES,
+        trace_dir=tmp_path,
+        evidence_sink=evidence,
+    )
+    events = [
+        json.loads(row)
+        for row in (tmp_path / (answer.request_id + ".jsonl")).read_text().splitlines()
+    ]
+    assert answer.verified and meter.calls == 6 and len(meter.observations) == 5
+    assert meter.estimated_usd is None and answer.trace["estimated_cost_usd"] is None
+    checks = trial.checks("A", answer, evidence, events, records)
+    assert all(checks.values()), checks
+    # Removing the provider-error accounting must not magically turn missing usage into zero.
+    assert not trial.checks(
+        "A", answer, evidence, [e for e in events if e["kind"] != "provider_error"], records
+    )["usage_accounted"]

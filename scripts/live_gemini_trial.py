@@ -33,6 +33,8 @@ RETEST_APPROVAL = "abc-only-max-30-model-calls-under-0.30-usd"
 
 
 def round_config(name):
+    if name == "retest-ab":
+        return "ab-only-max-20-model-calls-under-0.20-usd", 20, 0.20, CASES[:2]
     if name == "initial":
         return APPROVAL, 50, 0.95, CASES
     if name == "retest-abc":
@@ -241,8 +243,12 @@ def checks(case, answer, evidence, events, records):
     result = {
         "all_roles": {"coordinator", "researcher", "writer", "verifier"}
         <= {e["role"] for e in events if e["kind"] == "role"},
-        "real_model_usage": bool(answer.trace.get("model_calls"))
-        and answer.trace.get("estimated_cost_usd") is not None,
+        "real_model_usage": {"researcher", "writer", "verifier"}
+        <= {
+            e["role"]
+            for e in events
+            if e["kind"] == "model" and e.get("estimated_cost_usd") is not None
+        },
         "citations": all(
             (s := known.get((str(c.citation.event_id), c.citation.article_id)))
             and s["excerpt"] == c.quote
@@ -251,9 +257,11 @@ def checks(case, answer, evidence, events, records):
             for c in answer.claims
         ),
     }
-    result["complete_model_usage"] = sum(e["kind"] == "model_start" for e in events) == sum(
+    # Recovered transient errors may have unknown usage: retain their reservations,
+    # but do not confuse complete final-answer verification with a complete bill.
+    result["usage_accounted"] = sum(e["kind"] == "model_start" for e in events) == sum(
         e["kind"] == "model" for e in events
-    )
+    ) + sum(e["kind"] == "provider_error" and not e["partial_response"] for e in events)
     result["verification_executed"] = any(e["kind"] == "verification" for e in events)
     if case in "ABD":
         result["mcp_retrieval"] = {"giim_search_events", "giim_get_event"} <= {
@@ -469,7 +477,9 @@ if __name__ == "__main__":
     mode.add_argument("--preflight", action="store_true")
     mode.add_argument("--live", action="store_true")
     parser.add_argument("--credential-file", type=Path)
-    parser.add_argument("--round", choices=("initial", "retest-abc"), default="initial")
+    parser.add_argument(
+        "--round", choices=("initial", "retest-abc", "retest-ab"), default="initial"
+    )
     parser.add_argument(
         "--carry-unreported-reservation",
         action="store_true",

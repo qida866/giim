@@ -12,6 +12,7 @@ class Limits:
     detail_calls: int = 5
     tool_calls: int = 9
     model_calls: int = 10
+    provider_retries: int = 2
     output_tokens: int = 2048
     token_upper_bound: int = 120000
     max_context_bytes: int = 65000
@@ -23,6 +24,8 @@ class Limits:
             and 1 <= self.detail_calls <= 5
             and 1 <= self.tool_calls <= 9
             and 1 <= self.model_calls <= 10
+            and type(self.provider_retries) is int
+            and 0 <= self.provider_retries <= 2
             and 128 <= self.output_tokens <= 2048
             and 1000 <= self.token_upper_bound <= 120000
             and 1000 <= self.max_context_bytes <= 65000
@@ -35,15 +38,19 @@ class Budget:
         self.limits = limits
         self.rounds = self.details = self.tools = self.models = self.reserved = 0
 
-    def model(self, input_bytes: int) -> None:
-        self.models += 1
-        self.reserved += input_bytes + self.limits.output_tokens
+    def check_model(self, input_bytes: int) -> None:
         if (
-            self.models > self.limits.model_calls
+            self.models + 1 > self.limits.model_calls
             or input_bytes > self.limits.max_context_bytes
-            or self.reserved > self.limits.token_upper_bound
+            or self.reserved + input_bytes + self.limits.output_tokens
+            > self.limits.token_upper_bound
         ):
             raise BudgetExceeded("model_budget")
+
+    def model(self, input_bytes: int) -> None:
+        self.check_model(input_bytes)
+        self.models += 1
+        self.reserved += input_bytes + self.limits.output_tokens
 
     def round(self) -> None:
         if self.rounds >= self.limits.tool_rounds:

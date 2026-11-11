@@ -45,11 +45,21 @@ class Draft(StrictModel):
     claims: list[Claim] = Field(default_factory=list, max_length=30)
     acknowledge_uncertainty: bool = Field(
         default=True,
+        strict=True,
         description=(
             "Must be true when more than one current source is supplied, including agreeing "
             "reports and translations. Acknowledges evidence limitations, not only contradictions. "
             "Set true to repair missing_uncertainty."
         ),
+    )
+
+
+class DraftOutput(Draft):
+    """Model boundary: no default may silently supply an omitted acknowledgement."""
+
+    acknowledge_uncertainty: bool = Field(
+        strict=True,
+        description=Draft.model_fields["acknowledge_uncertainty"].description,
     )
 
 

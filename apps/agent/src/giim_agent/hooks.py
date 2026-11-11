@@ -26,6 +26,12 @@ class Hooks:
                 key: state.get(key)
                 for key in ("question", "evidence", "research", "draft", "errors")
             }
+            data["validation_requirements"] = {
+                "explicit_uncertainty_required": True,
+                "uncertainty_must_be_true": len(state.get("evidence") or []) > 1,
+                "preserve_all_current_sources": True,
+                "quote_and_citation_must_match_evidence": True,
+            }
             # 来源数据放入 user 内容，静态系统指令与证据分开。
             llm_request.contents = [
                 types.Content(role="user", parts=[types.Part(text=json.dumps(data, default=str))])
@@ -36,7 +42,16 @@ class Hooks:
         # Schema wire field rather than the narrower legacy Google Schema dialect.
         schema = llm_request.config.response_schema
         if isinstance(schema, type) and issubclass(schema, BaseModel):
-            llm_request.config.response_json_schema = schema.model_json_schema()
+            wire_schema = schema.model_json_schema()
+            if role == "writer" and len(callback_context.state.get("evidence") or []) > 1:
+                # Google's documented enum subset covers strings/numbers, not booleans.
+                # Keep the wire boolean compatible; enforce the value in the local gate.
+                field = wire_schema["properties"]["acknowledge_uncertainty"]
+                field["description"] = (
+                    "Required value: true for this request's multiple current sources. "
+                    + field.get("description", "")
+                )
+            llm_request.config.response_json_schema = wire_schema
             llm_request.config.response_schema = None
             llm_request.config.response_mime_type = "application/json"
 

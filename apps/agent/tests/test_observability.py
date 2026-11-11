@@ -62,7 +62,7 @@ def test_live_sdk_construction_without_network(monkeypatch):
     monkeypatch.setenv("GOOGLE_API_KEY", "test-only-not-a-real-key")
     monkeypatch.setenv("GIIM_RESEARCHER_MODEL", "gemini-3.6-flash")
     model = make_model("researcher", True)
-    assert model.model == "gemini-3.6-flash" and model.retry_options.attempts == 2
+    assert model.model == "gemini-3.6-flash" and model.retry_options.attempts == 1
     assert model.client_kwargs["vertexai"] is False
     # 不访问 api_client，也不调用 generate_content。
 

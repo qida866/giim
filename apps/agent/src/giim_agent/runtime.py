@@ -20,6 +20,7 @@ from .gateway import Gateway
 from .hooks import Hooks
 from .ledger import Ledger
 from .roles import make_model, role_agent
+from .retry import RetryingModel
 from .schemas import Answer, Draft
 from .security import BudgetExceeded, SafetyError, failure_category
 from .trace import Trace
@@ -93,7 +94,16 @@ async def ask(
                 hooks = Hooks(budget, trace)
                 roles = [
                     role_agent(
-                        role, models[role], hooks, gateway.tools() if role == "researcher" else None
+                        role,
+                        RetryingModel(
+                            model=models[role].model,
+                            delegate=models[role],
+                            role=role,
+                            budget=budget,
+                            trace=trace,
+                        ),
+                        hooks,
+                        gateway.tools() if role == "researcher" else None,
                     )
                     for role in ("researcher", "writer", "verifier")
                 ]

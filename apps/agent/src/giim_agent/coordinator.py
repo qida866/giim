@@ -10,7 +10,7 @@ from google.genai import types
 from pydantic import ConfigDict, ValidationError
 
 from .ledger import Ledger
-from .schemas import Draft, ResearchBundle, Verification
+from .schemas import DraftOutput, ResearchBundle, Verification
 from .trace import Trace
 
 
@@ -45,9 +45,17 @@ class Coordinator(BaseAgent):
             async for event in writer.run_async(ctx):
                 yield event
             try:
-                draft = Draft.model_validate(ctx.session.state.get("draft"))
+                draft = DraftOutput.model_validate(ctx.session.state.get("draft"))
             except (ValidationError, TypeError):
                 errors = ["invalid_draft"]
+                self.trace.emit(
+                    "verification",
+                    role="coordinator",
+                    model_ok=False,
+                    deterministic_ok=False,
+                    errors=errors,
+                    iteration=iteration,
+                )
                 continue
             self.trace.emit("role", role="verifier", iteration=iteration)
             async for event in verifier.run_async(ctx):
