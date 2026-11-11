@@ -125,3 +125,36 @@ async def test_roles_use_native_json_schema_without_weakening_local_validation(r
     assert request.config.response_json_schema == schema.model_json_schema()
     assert schema.model_config["extra"] == "forbid"
     json.dumps(request.config.model_dump(mode="json", exclude_none=True))
+
+
+async def test_agreeing_multilingual_draft_must_repair_uncertainty_before_publication(settings):
+    """Replay the live failure flag; a model's approval cannot bypass the evidence gate."""
+    repair_inputs = []
+
+    class UncertaintyRepair(FakeModel):
+        async def generate_content_async(self, llm_request, stream=False):
+            async for reply in super().generate_content_async(llm_request, stream):
+                if self.role == "writer":
+                    supplied = json.loads(llm_request.contents[0].parts[0].text)
+                    draft = json.loads(reply.content.parts[0].text)
+                    assert {s["language"] for s in supplied["evidence"]} == {"en", "zh", "es"}
+                    errors = supplied.get("errors") or []
+                    repair_inputs.append(errors)
+                    draft["acknowledge_uncertainty"] = "missing_uncertainty" in errors
+                    reply.content.parts[0].text = json.dumps(draft)
+                elif self.role == "verifier":
+                    # The live model approved the false flag: reproduce that unsafe advisory vote.
+                    reply.content.parts[0].text = json.dumps(
+                        {"ok": True, "unsupported_claims": [], "missing_citations": []}
+                    )
+                yield reply
+
+    answer = await ask(
+        "AI laboratory",
+        settings=settings,
+        model_factory=lambda role, live, override, fault: UncertaintyRepair(role=role),
+    )
+    assert repair_inputs == [[], ["missing_uncertainty"]]
+    assert answer.verified and answer.revisions == 1
+    assert len(answer.claims) == 3
+    assert "do not establish independent confirmation or certainty" in answer.answer

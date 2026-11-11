@@ -43,7 +43,14 @@ class Claim(StrictModel):
 
 class Draft(StrictModel):
     claims: list[Claim] = Field(default_factory=list, max_length=30)
-    acknowledge_uncertainty: bool = True
+    acknowledge_uncertainty: bool = Field(
+        default=True,
+        description=(
+            "Must be true when more than one current source is supplied, including agreeing "
+            "reports and translations. Acknowledges evidence limitations, not only contradictions. "
+            "Set true to repair missing_uncertainty."
+        ),
+    )
 
 
 class Verification(StrictModel):
