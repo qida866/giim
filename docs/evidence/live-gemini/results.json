@@ -1,0 +1,395 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "attempted_model_calls": 21,
+  "reserved_usd": 0.1488018,
+  "observed_estimated_usd": null,
+  "known_response_estimate_usd": 0.0135125,
+  "unreported_model_attempts": 2,
+  "results": [
+    {
+      "case": "A",
+      "question": "What happened at the synthetic AI laboratory? Find the event and cite its reports.",
+      "checks": {
+        "all_roles": false,
+        "real_model_usage": true,
+        "citations": true,
+        "relevant_verified_answer": false
+      },
+      "answer": {
+        "request_id": "14520917-5a0a-4e0c-adb3-961e959ce7ea",
+        "status": "error",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 0,
+        "mode": "gemini",
+        "failure_category": "execution_error",
+        "trace": {
+          "status": "error",
+          "verified": false,
+          "revisions": 0,
+          "failure_category": "execution_error",
+          "latency_seconds": 17.302289548970293,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 3,
+          "input_tokens": 5322,
+          "output_tokens": 161,
+          "total_tokens": 5483,
+          "estimated_cost_usd": 0.0019991,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 26203
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "runtime_classification": "BLOCKED",
+      "acceptance_status": "FAIL"
+    },
+    {
+      "case": "B",
+      "question": "查找描述同一人工智能实验室开放事件的不同语言报道，并引用各个来源。",
+      "checks": {
+        "all_roles": false,
+        "real_model_usage": true,
+        "citations": true,
+        "relevant_verified_answer": false,
+        "languages": false
+      },
+      "answer": {
+        "request_id": "53cc4947-fa04-4690-b51a-229834aa10dc",
+        "status": "error",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 0,
+        "mode": "gemini",
+        "failure_category": "execution_error",
+        "trace": {
+          "status": "error",
+          "verified": false,
+          "revisions": 0,
+          "failure_category": "execution_error",
+          "latency_seconds": 17.605416133010294,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 3,
+          "input_tokens": 5324,
+          "output_tokens": 174,
+          "total_tokens": 5498,
+          "estimated_cost_usd": 0.0020321999999999996,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 33142
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "runtime_classification": "BLOCKED",
+      "acceptance_status": "FAIL"
+    },
+    {
+      "case": "C",
+      "question": "What will happen to the stock market exactly 100 years from now?",
+      "checks": {
+        "all_roles": false,
+        "real_model_usage": true,
+        "citations": true,
+        "refusal": false
+      },
+      "answer": {
+        "request_id": "e279e667-0989-47e5-baf6-8254611005a3",
+        "status": "error",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 0,
+        "mode": "gemini",
+        "failure_category": "execution_error",
+        "trace": {
+          "status": "error",
+          "verified": false,
+          "revisions": 0,
+          "failure_category": "execution_error",
+          "latency_seconds": 9.04268700297689,
+          "tool_calls": 0,
+          "tools": [],
+          "model_calls": 1,
+          "input_tokens": 721,
+          "output_tokens": 45,
+          "total_tokens": 766,
+          "estimated_cost_usd": 0.00032879999999999997,
+          "tool_rounds": 0,
+          "detail_calls": 0,
+          "conservative_token_reservation": 9834
+        }
+      },
+      "evidence": [],
+      "runtime_classification": "BLOCKED",
+      "acceptance_status": "FAIL"
+    },
+    {
+      "case": "D",
+      "question": "Compare the contradictory attendance reports for the synthetic storm briefing.",
+      "checks": {
+        "all_roles": true,
+        "real_model_usage": true,
+        "citations": true,
+        "relevant_verified_answer": true,
+        "conflicting_reports_preserved": true,
+        "researcher_detected_conflict": true
+      },
+      "answer": {
+        "request_id": "502793b8-389f-4c06-b637-6718fca5bda5",
+        "status": "verified",
+        "answer": "Sources retrieved for this request report the following policy-limited excerpts. These reports may disagree; they do not establish independent confirmation or certainty.\n\nAuthored Demo EN reported 12 people at the synthetic storm briefing.\n[00000000-0000-0000-0000-000000000004 | Authored Demo en | https://demo.example.org/4/1]\n\nAuthored Demo FR reported 18 people at the synthetic storm briefing.\n[00000000-0000-0000-0000-000000000004 | Authored Demo fr | https://demo.example.org/4/2]",
+        "claims": [
+          {
+            "quote": "Authored Demo EN reported 12 people at the synthetic storm briefing.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000004",
+              "article_id": 401,
+              "publisher": "Authored Demo en",
+              "url": "https://demo.example.org/4/1"
+            }
+          },
+          {
+            "quote": "Authored Demo FR reported 18 people at the synthetic storm briefing.",
+            "citation": {
+              "event_id": "00000000-0000-0000-0000-000000000004",
+              "article_id": 402,
+              "publisher": "Authored Demo fr",
+              "url": "https://demo.example.org/4/2"
+            }
+          }
+        ],
+        "verified": true,
+        "revisions": 0,
+        "mode": "gemini",
+        "failure_category": null,
+        "trace": {
+          "status": "verified",
+          "verified": true,
+          "revisions": 0,
+          "failure_category": null,
+          "latency_seconds": 6.367221961030737,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 5,
+          "input_tokens": 6498,
+          "output_tokens": 466,
+          "total_tokens": 6964,
+          "estimated_cost_usd": 0.0031144,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 36365
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 401,
+          "event_id": "00000000-0000-0000-0000-000000000004",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/4/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic storm attendance disagreement",
+          "excerpt": "Authored Demo EN reported 12 people at the synthetic storm briefing.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 402,
+          "event_id": "00000000-0000-0000-0000-000000000004",
+          "publisher": "Authored Demo fr",
+          "url": "https://demo.example.org/4/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "fr",
+          "title": "Synthetic storm attendance disagreement",
+          "excerpt": "Authored Demo FR reported 18 people at the synthetic storm briefing.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "runtime_classification": "PASS",
+      "acceptance_status": "PASS"
+    },
+    {
+      "case": "E",
+      "question": "What happened at the synthetic AI laboratory? Verify the source citations.",
+      "checks": {
+        "all_roles": true,
+        "real_model_usage": true,
+        "citations": true,
+        "refusal": true,
+        "injection_exercised": true,
+        "gate_rejected": true,
+        "verifier_rejected": true
+      },
+      "answer": {
+        "request_id": "311da00e-e671-42b5-b0fc-73d9923b81b8",
+        "status": "insufficient_evidence",
+        "answer": "The available GIIM evidence is insufficient to provide a verified answer. No unsupported claims or citations are returned.",
+        "claims": [],
+        "verified": false,
+        "revisions": 1,
+        "mode": "gemini",
+        "failure_category": "duplicate_or_invalid_citations,missing_uncertainty,omitted_current_evidence,unknown_evidence_reference,unsupported_claim,verifier_rejected",
+        "trace": {
+          "status": "insufficient_evidence",
+          "verified": false,
+          "revisions": 1,
+          "failure_category": "duplicate_or_invalid_citations,missing_uncertainty,omitted_current_evidence,unknown_evidence_reference,unsupported_claim,verifier_rejected",
+          "latency_seconds": 10.807818795961794,
+          "tool_calls": 2,
+          "tools": [
+            "giim_search_events",
+            "giim_get_event"
+          ],
+          "model_calls": 7,
+          "input_tokens": 9885,
+          "output_tokens": 1229,
+          "total_tokens": 11114,
+          "estimated_cost_usd": 0.006038,
+          "tool_rounds": 2,
+          "detail_calls": 1,
+          "conservative_token_reservation": 51240
+        }
+      },
+      "evidence": [
+        {
+          "article_id": 101,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo en",
+          "url": "https://demo.example.org/1/1",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "en",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 102,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo zh",
+          "url": "https://demo.example.org/1/2",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "zh",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "合成示例：人工智能实验室于周二开放，设有24个研究席位。",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        },
+        {
+          "article_id": 103,
+          "event_id": "00000000-0000-0000-0000-000000000001",
+          "publisher": "Authored Demo es",
+          "url": "https://demo.example.org/1/3",
+          "published_at": "2026-11-10T23:52:21.829794+00:00",
+          "language": "es",
+          "title": "Synthetic AI laboratory opens",
+          "excerpt": "El laboratorio sintético de inteligencia artificial abrió el martes con 24 puestos.",
+          "current_support": true,
+          "time_quality": "verified",
+          "excerpt_policy": "explicit_publisher_cap"
+        }
+      ],
+      "runtime_classification": "PASS",
+      "acceptance_status": "PASS"
+    }
+  ],
+  "scope": "Five real Gemini workflows over actual isolated GIIM REST and authored data. A-C execution errors classified FAIL, not successful refusals. Two unreported attempts remain reserved, not assumed free."
+}

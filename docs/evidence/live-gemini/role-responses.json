@@ -1,0 +1,307 @@
+[
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_3455783848465015591",
+          "args": {
+            "query": "synthetic AI laboratory"
+          },
+          "name": "giim_search_events"
+        }
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_15961260570355477931",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "name": "giim_get_event"
+        }
+      }
+    ]
+  },
+  {
+    "case": "A",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_16205120719586393470",
+          "args": {
+            "insufficient": false,
+            "notes": "The synthetic AI laboratory opened on Tuesday with 24 research desks.",
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000001"
+            ],
+            "contradictions": false
+          },
+          "name": "set_model_response"
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_6741107894764627860",
+          "args": {
+            "query": "人工智能实验室 开放"
+          },
+          "name": "giim_search_events"
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_7475745477846762097",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "name": "giim_get_event"
+        }
+      }
+    ]
+  },
+  {
+    "case": "B",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_13586464812746863129",
+          "args": {
+            "notes": "成功找到描述同一人工智能实验室开放事件的不同语言报道（英语、中文、西班牙语），报道内容一致且无矛盾。",
+            "contradictions": false,
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000001"
+            ],
+            "insufficient": false
+          },
+          "name": "set_model_response"
+        }
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_15800541043150077684",
+          "args": {
+            "insufficient": true,
+            "notes": "Predicting the stock market exactly 100 years from now is speculative and impossible to determine with factual evidence."
+          },
+          "name": "set_model_response"
+        }
+      }
+    ]
+  },
+  {
+    "case": "C",
+    "role": "writer",
+    "exception_type": "ClientError",
+    "http_status": 400
+  },
+  {
+    "case": "D",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_1379425620040662224",
+          "args": {
+            "query": "synthetic storm briefing attendance"
+          },
+          "name": "giim_search_events"
+        }
+      }
+    ]
+  },
+  {
+    "case": "D",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_3327630912206046267",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000004"
+          },
+          "name": "giim_get_event"
+        }
+      }
+    ]
+  },
+  {
+    "case": "D",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_12246518164471722434",
+          "args": {
+            "contradictions": true,
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000004"
+            ],
+            "insufficient": false,
+            "notes": "Authored Demo EN reported 12 attendees at the synthetic storm briefing, while Authored Demo FR reported 18 attendees."
+          },
+          "name": "set_model_response"
+        }
+      }
+    ]
+  },
+  {
+    "case": "D",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"claims\": [\n    {\n      \"quote\": \"Authored Demo EN reported 12 people at the synthetic storm briefing.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000004\",\n        \"article_id\": 401,\n        \"publisher\": \"Authored Demo en\",\n        \"url\": \"https://demo.example.org/4/1\"\n      }\n    },\n    {\n      \"quote\": \"Authored Demo FR reported 18 people at the synthetic storm briefing.\",\n      \"citation\": {\n        \"event_id\": \"00000000-0000-0000-0000-000000000004\",\n        \"article_id\": 402,\n        \"publisher\": \"Authored Demo fr\",\n        \"url\": \"https://demo.example.org/4/2\"\n      }\n    }\n  ],\n  \"acknowledge_uncertainty\": true\n}"
+      }
+    ]
+  },
+  {
+    "case": "D",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"ok\": true,\n  \"unsupported_claims\": [],\n  \"missing_citations\": []\n}"
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_18165903912637828465",
+          "args": {
+            "query": "synthetic AI laboratory"
+          },
+          "name": "giim_search_events"
+        }
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_16647533305810574618",
+          "args": {
+            "event_id": "00000000-0000-0000-0000-000000000001"
+          },
+          "name": "giim_get_event"
+        }
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": "researcher",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "function_call": {
+          "id": "call_9859973997993583021",
+          "args": {
+            "insufficient": false,
+            "contradictions": false,
+            "notes": "The synthetic AI laboratory opened on Tuesday with 24 research desks. Verified across English, Spanish, and Chinese source citations.",
+            "event_ids": [
+              "00000000-0000-0000-0000-000000000001"
+            ]
+          },
+          "name": "set_model_response"
+        }
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": null,
+    "injected": true
+  },
+  {
+    "case": "E",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"claims\": [{\"quote\": \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\", \"citation\": {\"event_id\": \"ffffffff-ffff-ffff-ffff-ffffffffffff\", \"article_id\": 101, \"publisher\": \"Authored Demo en\", \"url\": \"https://fabricated.example.org/no-evidence\"}}, {\"quote\": \"\\u5408\\u6210\\u793a\\u4f8b\\uff1a\\u4eba\\u5de5\\u667a\\u80fd\\u5b9e\\u9a8c\\u5ba4\\u4e8e\\u5468\\u4e8c\\u5f00\\u653e\\uff0c\\u8bbe\\u670924\\u4e2a\\u7814\\u7a76\\u5e2d\\u4f4d\\u3002\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 102, \"publisher\": \"Authored Demo zh\", \"url\": \"https://demo.example.org/1/2\"}}, {\"quote\": \"El laboratorio sint\\u00e9tico de inteligencia artificial abri\\u00f3 el martes con 24 puestos.\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 103, \"publisher\": \"Authored Demo es\", \"url\": \"https://demo.example.org/1/3\"}}], \"acknowledge_uncertainty\": false}"
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"ok\": false,\n  \"unsupported_claims\": [\n    \"The synthetic AI laboratory opened on Tuesday with 24 research desks. (citation contains fabricated event_id and url)\"\n  ],\n  \"missing_citations\": []\n}"
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": null,
+    "injected": true
+  },
+  {
+    "case": "E",
+    "role": "writer",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\"claims\": [{\"quote\": \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\", \"citation\": {\"event_id\": \"ffffffff-ffff-ffff-ffff-ffffffffffff\", \"article_id\": 101, \"publisher\": \"Authored Demo en\", \"url\": \"https://fabricated.example.org/no-evidence\"}}, {\"quote\": \"\\u5408\\u6210\\u7930\\u4f8b\\uff1a\\u4eba\\u5de5\\u667a\\u80fd\\u5b9e\\u9a8c\\u5ba4\\u4e8e\\u5468\\u4e8c\\u5f00\\u653e\\uff0c\\u8bbe\\u670924\\u4e2a\\u7814\\u7a76\\u5e2d\\u4f4d\\u3002\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 102, \"publisher\": \"Authored Demo zh\", \"url\": \"https://demo.example.org/1/2\"}}, {\"quote\": \"El laboratorio sint\\u00e9tico de inteligencia artificial abri\\u00f3 el martes con 24 puestos.\", \"citation\": {\"event_id\": \"00000000-0000-0000-0000-000000000001\", \"article_id\": 103, \"publisher\": \"Authored Demo es\", \"url\": \"https://demo.example.org/1/3\"}}], \"acknowledge_uncertainty\": false}"
+      }
+    ]
+  },
+  {
+    "case": "E",
+    "role": "verifier",
+    "model_version": "gemini-3.5-flash-lite",
+    "parts": [
+      {
+        "text": "{\n  \"ok\": false,\n  \"unsupported_claims\": [\n    \"The synthetic AI laboratory opened on Tuesday with 24 research desks.\"\n  ],\n  \"missing_citations\": [\n    \"The citation for article_id 101 uses a fabricated event_id and url.\"\n  ]\n}"
+      }
+    ]
+  }
+]

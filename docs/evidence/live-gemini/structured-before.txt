@@ -1,0 +1,139 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_adk_terminal_tool_returns_json_safe_validated_identifiers[ResearchBundle-payload0] _
+
+schema = <class 'giim_agent.schemas.ResearchBundle'>
+payload = {'event_ids': ['00000000-0000-0000-0000-000000000001']}
+
+    @pytest.mark.parametrize("schema,payload", [
+        (ResearchBundle, {"event_ids": ["00000000-0000-0000-0000-000000000001"]}),
+        (Draft, {"claims": [{"quote": "Authored test.", "citation": {
+            "event_id": "00000000-0000-0000-0000-000000000001", "article_id": 101,
+            "publisher": "Authored Demo en", "url": "https://demo.example.org/1/1"}}]})])
+    async def test_adk_terminal_tool_returns_json_safe_validated_identifiers(schema, payload):
+        context = SimpleNamespace(actions=SimpleNamespace())
+        result = await SetModelResponseTool(schema).run_async(args=payload, tool_context=context)
+        # ADK serializes this dictionary with json.dumps; Python UUID instances must not escape.
+>       decoded = json.loads(json.dumps(result))
+                             ^^^^^^^^^^^^^^^^^^
+
+apps/agent/tests/test_structured_tool.py:26:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.11/json/__init__.py:231: in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0xffffa29ba490>
+o = UUID('00000000-0000-0000-0000-000000000001')
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return super().default(o)
+
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type UUID is not JSON serializable
+
+/usr/local/lib/python3.11/json/encoder.py:180: TypeError
+_ test_adk_terminal_tool_returns_json_safe_validated_identifiers[Draft-payload1] _
+
+schema = <class 'giim_agent.schemas.Draft'>
+payload = {'claims': [{'citation': {'article_id': 101, 'event_id': '00000000-0000-0000-0000-000000000001', 'publisher': 'Authored Demo en', 'url': 'https://demo.example.org/1/1'}, 'quote': 'Authored test.'}]}
+
+    @pytest.mark.parametrize("schema,payload", [
+        (ResearchBundle, {"event_ids": ["00000000-0000-0000-0000-000000000001"]}),
+        (Draft, {"claims": [{"quote": "Authored test.", "citation": {
+            "event_id": "00000000-0000-0000-0000-000000000001", "article_id": 101,
+            "publisher": "Authored Demo en", "url": "https://demo.example.org/1/1"}}]})])
+    async def test_adk_terminal_tool_returns_json_safe_validated_identifiers(schema, payload):
+        context = SimpleNamespace(actions=SimpleNamespace())
+        result = await SetModelResponseTool(schema).run_async(args=payload, tool_context=context)
+        # ADK serializes this dictionary with json.dumps; Python UUID instances must not escape.
+>       decoded = json.loads(json.dumps(result))
+                             ^^^^^^^^^^^^^^^^^^
+
+apps/agent/tests/test_structured_tool.py:26:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.11/json/__init__.py:231: in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0xffffa29ba490>
+o = UUID('00000000-0000-0000-0000-000000000001')
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return super().default(o)
+
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type UUID is not JSON serializable
+
+/usr/local/lib/python3.11/json/encoder.py:180: TypeError
+_______ test_terminal_research_response_reaches_writer_verifier_and_gate _______
+
+settings = Settings(api_url='http://127.0.0.1:45093', timeout=10, excerpt_limit=500, publisher_caps={'Authored Demo en': 500, 'Authored Demo zh': 500, 'Authored Demo es': 500, 'Authored Demo fr': 500}, max_bytes=20000, upstream_bytes=1000000)
+
+    async def test_terminal_research_response_reaches_writer_verifier_and_gate(settings):
+        def factory(role, live, override, fault):
+            return TerminalResearch(role=role, fault=fault)
+        answer = await ask("AI laboratory", settings=settings, trace_dir=None, model_factory=factory)
+>       assert answer.verified, answer.failure_category
+E       AssertionError: execution_error
+E       assert False
+E        +  where False = Answer(request_id='ad65daa2-10c7-4aa2-b67c-58d2bd49ec4f', status='error', answer='The available GIIM evidence is insuf...kens': None, 'estimated_cost_usd': None, 'tool_rounds': 2, 'detail_calls': 1, 'conservative_token_reservation': 19891}).verified
+
+apps/agent/tests/test_structured_tool.py:51: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  google_adk.google.adk.telemetry._metrics:_metrics.py:788 Skipping missing token usage metadata for agent researcher and model giim-fake-v1
+WARNING  google_adk.google.adk.telemetry._metrics:_metrics.py:788 Skipping missing token usage metadata for agent researcher and model giim-fake-v1
+WARNING  google_adk.google.adk.telemetry._metrics:_metrics.py:788 Skipping missing token usage metadata for agent researcher and model giim-fake-v1
+=========================== short test summary info ============================
+FAILED apps/agent/tests/test_structured_tool.py::test_adk_terminal_tool_returns_json_safe_validated_identifiers[ResearchBundle-payload0]
+FAILED apps/agent/tests/test_structured_tool.py::test_adk_terminal_tool_returns_json_safe_validated_identifiers[Draft-payload1]
+FAILED apps/agent/tests/test_structured_tool.py::test_terminal_research_response_reaches_writer_verifier_and_gate
+3 failed in 1.46s

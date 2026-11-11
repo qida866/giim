@@ -1,0 +1,11 @@
+{
+  "scope": "All tracked and unignored working-tree files checked for exact available credential values and high-confidence key patterns; all reachable Git blobs checked for the current Gemini key. Not a full historical secret audit or publisher-license audit.",
+  "credential_file_exists": true,
+  "credential_mode": "0600",
+  "credential_gitignored": true,
+  "working_tree_files_scanned": 295,
+  "working_tree_findings_paths": [],
+  "history_blobs_scanned": 651,
+  "active_gemini_key_history_findings_paths": [],
+  "export_content": "Authored synthetic evidence; no restricted publisher corpus; thought signatures omitted."
+}

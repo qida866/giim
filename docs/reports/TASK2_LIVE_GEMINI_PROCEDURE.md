@@ -1,5 +1,7 @@
 # Controlled live Gemini integration trial
 
+> Follow-up: the approved trial is complete. See the [live integration report](TASK2_LIVE_GEMINI_REPORT.md): two scenarios passed and three failed. All five workflow slots were used; the commands below must not be rerun without a new approval.
+
 Prepared November 10, 2026 on `feature/mcp-agent`, following acceptance commit `0342649161c4e07cedab4510dcccca197de9055e`.
 
 **Awaiting explicit approval. LIVE GEMINI TEST: NOT VERIFIED. No billable calls were made during preparation.**

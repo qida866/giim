@@ -1,0 +1,56 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_pinned_genai_sdk_accepts_all_role_schemas ________________
+
+    def test_pinned_genai_sdk_accepts_all_role_schemas():
+        from google.genai import _transformers
+        from giim_agent.schemas import Verification
+        for schema in (ResearchBundle, Draft, Verification):
+>           converted = _transformers.t_schema(None, schema)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+apps/agent/tests/test_structured_tool.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = None, origin = <class 'giim_agent.schemas.Draft'>
+
+    def t_schema(
+        client: Optional[_api_client.BaseApiClient],
+        origin: Union[types.SchemaUnionDict, Any],
+    ) -> Optional[types.Schema]:
+      if not origin:
+        return None
+      if isinstance(origin, dict) and _is_type_dict_str_any(origin):
+        process_schema(origin, client)
+        return types.Schema.model_validate(origin)
+      if isinstance(origin, EnumMeta):
+        return _process_enum(origin, client)
+      if is_duck_type_of(origin, types.Schema):
+        if dict(origin) == dict(types.Schema()):  # type: ignore [arg-type]
+          # response_schema value was coerced to an empty Schema instance because
+          # it did not adhere to the Schema field annotation
+          _raise_for_unsupported_schema_type(origin)
+        schema = origin.model_dump(exclude_unset=True)  # type: ignore[union-attr]
+        process_schema(schema, client)
+        return types.Schema.model_validate(schema)
+
+      if (
+          # in Python 3.9 Generic alias list[int] counts as a type,
+          # and breaks issubclass because it's not a class.
+          not isinstance(origin, GenericAlias)
+          and isinstance(origin, type)
+          and issubclass(origin, pydantic.BaseModel)
+      ):
+        schema = origin.model_json_schema()
+        process_schema(schema, client)
+>       return types.Schema.model_validate(schema)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Schema
+E       properties.claims.items.properties.citation.properties.article_id.exclusiveMinimum
+E         Extra inputs are not permitted [type=extra_forbidden, input_value=0, input_type=int]
+E           For further information visit https://errors.pydantic.dev/2.14/v/extra_forbidden
+
+/usr/local/lib/python3.11/site-packages/google/genai/_transformers.py:898: ValidationError
+=========================== short test summary info ============================
+FAILED apps/agent/tests/test_structured_tool.py::test_pinned_genai_sdk_accepts_all_role_schemas
+1 failed, 7 deselected in 0.41s

@@ -2,7 +2,7 @@
 
 **Decision: READY FOR LIVE TESTING.** This means the tested local engineering paths are ready for an explicitly authorized Gemini trial, not that live answer quality or production readiness has been demonstrated.
 
-**LIVE GEMINI TEST: NOT VERIFIED**
+**Historical status at local acceptance: LIVE GEMINI TEST NOT VERIFIED.** The subsequent [live trial report](TASK2_LIVE_GEMINI_REPORT.md) records two passing and three failing scenarios, compatibility fixes and remaining retests.
 
 Date: November 10, 2026. Audited starting commit: `12bdc154900568e2c21e7316093919c1ee7aadc1`, clean worktree on `feature/mcp-agent`. Corrected code/test commit: **`271f672c28d8fdf25c5fc4ded73630e38a995c7f`**. Documentation/evidence are committed afterward. This was a fresh execution-based audit by the development assistant, not an independent human or third-party certification.
 

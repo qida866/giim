@@ -1,0 +1,11 @@
+{
+  "event_details_identical_before_after": {
+    "00000000-0000-0000-0000-000000000001": true,
+    "00000000-0000-0000-0000-000000000004": true
+  },
+  "method": "Compare full normalized MCP event responses before the first live workflow and after the last workflow. No database snapshot/physical-row equality claim.",
+  "after_sha256": {
+    "00000000-0000-0000-0000-000000000001": "0e1b84e54d410f78815847e05aa016e62c992ce3e4bb4199138dd0b189533ce3",
+    "00000000-0000-0000-0000-000000000004": "a8ba0ba34e6df0cde10c237557c31581ae68875ee48c87a62dae7c7d4c773e8a"
+  }
+}
