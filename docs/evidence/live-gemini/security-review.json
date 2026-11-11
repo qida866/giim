@@ -3,9 +3,9 @@
   "credential_file_exists": true,
   "credential_mode": "0600",
   "credential_gitignored": true,
-  "working_tree_files_scanned": 295,
+  "working_tree_files_scanned": 296,
   "working_tree_findings_paths": [],
-  "history_blobs_scanned": 651,
+  "history_blobs_scanned": 677,
   "active_gemini_key_history_findings_paths": [],
   "export_content": "Authored synthetic evidence; no restricted publisher corpus; thought signatures omitted."
 }
