@@ -1,4 +1,4 @@
-"""Approval-gated five-workflow Gemini trial; --preflight makes no model calls."""
+"""Approval-gated Gemini trials; --preflight makes no model calls."""
 
 import argparse
 import asyncio
@@ -29,6 +29,17 @@ MODEL = "gemini-3.5-flash-lite"
 PRICES = {MODEL: {"input_per_million": 0.30, "output_per_million": 2.50}}
 LIMITS = Limits(timeout=180, token_upper_bound=80000)
 APPROVAL = "five-workflows-max-50-model-calls-under-1-usd"
+RETEST_APPROVAL = "abc-only-max-30-model-calls-under-0.30-usd"
+
+
+def round_config(name):
+    if name == "initial":
+        return APPROVAL, 50, 0.95, CASES
+    if name == "retest-abc":
+        return RETEST_APPROVAL, 30, 0.30, CASES[:3]
+    raise SafetyError("trial_unknown_round")
+
+
 CASES = [
     ("A", "What happened at the synthetic AI laboratory? Find the event and cite its reports."),
     ("B", "查找描述同一人工智能实验室开放事件的不同语言报道，并引用各个来源。"),
@@ -51,6 +62,8 @@ def private_json(path: Path, value):
 
 @dataclass
 class Meter:
+    max_calls: int = 50
+    max_usd: float = 0.95
     calls: int = 0
     reserved_usd: float = 0
     observed_usd: float = 0
@@ -70,7 +83,10 @@ class Meter:
         size = len(json.dumps(request.model_dump(exclude_none=True), default=schema).encode())
         # Byte count is a conservative text-token proxy, plus provider/schema margin.
         reservation = ((size + 1000) * 0.30 + 2048 * 2.50) / 1_000_000
-        if self.calls >= 50 or max(self.reserved_usd, self.observed_usd) + reservation > 0.95:
+        if (
+            self.calls >= self.max_calls
+            or max(self.reserved_usd, self.observed_usd) + reservation >= self.max_usd
+        ):
             raise SafetyError("trial_budget")
         self.calls += 1
         self.reserved_usd += reservation
@@ -235,7 +251,17 @@ def checks(case, answer, evidence, events, records):
             for c in answer.claims
         ),
     }
+    result["complete_model_usage"] = sum(e["kind"] == "model_start" for e in events) == sum(
+        e["kind"] == "model" for e in events
+    )
+    result["verification_executed"] = any(e["kind"] == "verification" for e in events)
     if case in "ABD":
+        result["mcp_retrieval"] = {"giim_search_events", "giim_get_event"} <= {
+            e["tool"] for e in events if e["kind"] == "tool"
+        }
+        result["both_verifiers_approved"] = any(
+            e["kind"] == "verification" and e["model_ok"] and e["deterministic_ok"] for e in events
+        )
         target = identifier(4 if case == "D" else 1)
         result["relevant_verified_answer"] = (
             answer.verified
@@ -277,10 +303,11 @@ def checks(case, answer, evidence, events, records):
     return result
 
 
-def resume_state(path, carry_unreported=False):
+def resume_state(path, carry_unreported=False, round_name="initial"):
     """Continue only unattempted scenarios, carrying all prior spending forward."""
+    _, max_calls, max_usd, cases = round_config(round_name)
     if path is None:
-        return Meter(), []
+        return Meter(max_calls=max_calls, max_usd=max_usd), []
     data = json.loads(path.read_text())
     calls, reserved, measured = (
         data["attempted_model_calls"],
@@ -291,28 +318,31 @@ def resume_state(path, carry_unreported=False):
     if missing_usage and carry_unreported:
         measured = data.get("known_response_estimate_usd")
     if (
-        data["model"] != MODEL
+        data.get("round", "initial") != round_name
+        or data["model"] != MODEL
         or isinstance(calls, bool)
         or not isinstance(calls, int)
-        or not 0 <= calls <= 50
+        or not 0 <= calls <= max_calls
         or measured is None
         or any(
             isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0
             for v in (reserved, measured)
         )
-        or max(reserved, measured) >= 0.95
+        or max(reserved, measured) >= max_usd
     ):
         raise SafetyError("trial_invalid_or_exhausted_resume_budget")
     completed = [r for r in data["results"] if "answer" in r]
     identifiers = [r["case"] for r in completed]
     if len(identifiers) != len(set(identifiers)) or identifiers != [
-        c for c, _ in CASES[: len(completed)]
+        c for c, _ in cases[: len(completed)]
     ]:
         raise SafetyError("trial_invalid_resume_cases")
     returned = sum(r["answer"]["trace"]["model_calls"] for r in completed)
     if returned > calls or (returned != calls and not (carry_unreported and missing_usage)):
         raise SafetyError("trial_incomplete_resume_usage")
     return Meter(
+        max_calls=max_calls,
+        max_usd=max_usd,
         calls=calls,
         reserved_usd=reserved,
         observed_usd=measured,
@@ -321,12 +351,14 @@ def resume_state(path, carry_unreported=False):
 
 
 async def run(args):
-    if args.live and os.getenv("GIIM_LIVE_TRIAL_APPROVAL") == APPROVAL:
+    round_name = getattr(args, "round", "initial")
+    approval, _, _, cases = round_config(round_name)
+    if args.live and os.getenv("GIIM_LIVE_TRIAL_APPROVAL") == approval:
         credential = getattr(args, "credential_file", None)
         if credential:
             os.environ["GOOGLE_API_KEY"] = credential.read_text().strip()
     if args.live and (
-        os.getenv("GIIM_LIVE_TRIAL_APPROVAL") != APPROVAL
+        os.getenv("GIIM_LIVE_TRIAL_APPROVAL") != approval
         or os.getenv("GIIM_ENABLE_LIVE_GEMINI") != "1"
         or not os.getenv("GOOGLE_API_KEY")
     ):
@@ -334,7 +366,9 @@ async def run(args):
     if args.api != "http://127.0.0.1:8000":
         raise SafetyError("trial_requires_isolated_container_network")
     meter, results = resume_state(
-        getattr(args, "resume_from", None), getattr(args, "carry_unreported_reservation", False)
+        getattr(args, "resume_from", None),
+        getattr(args, "carry_unreported_reservation", False),
+        round_name,
     )
     settings = Settings(api_url=args.api, publisher_caps=CAPS)
     # mkdir is exclusive: rerunning an approved trial cannot silently add more paid work.
@@ -354,7 +388,7 @@ async def run(args):
             "PASS: five actual API MCP tools and exact authored two-event dataset; zero model calls."
         )
         return 0
-    for case, question in CASES[len(results) :]:
+    for case, question in cases[len(results) :]:
         evidence, records = [], []
         answer = await ask(
             question,
@@ -392,6 +426,7 @@ async def run(args):
             args.output / "results.json",
             {
                 "model": MODEL,
+                "round": round_name,
                 "results": results,
                 "attempted_model_calls": meter.calls,
                 "reserved_usd": meter.reserved_usd,
@@ -402,7 +437,7 @@ async def run(args):
         )
         print(f"{case}: {status}; estimated cumulative USD {meter.estimated_usd}")
         if status != "PASS":
-            for remaining, text in CASES[len(results) :]:
+            for remaining, text in cases[len(results) :]:
                 results.append(
                     {
                         "case": remaining,
@@ -415,6 +450,7 @@ async def run(args):
                 args.output / "results.json",
                 {
                     "model": MODEL,
+                    "round": round_name,
                     "results": results,
                     "attempted_model_calls": meter.calls,
                     "reserved_usd": meter.reserved_usd,
@@ -433,6 +469,7 @@ if __name__ == "__main__":
     mode.add_argument("--preflight", action="store_true")
     mode.add_argument("--live", action="store_true")
     parser.add_argument("--credential-file", type=Path)
+    parser.add_argument("--round", choices=("initial", "retest-abc"), default="initial")
     parser.add_argument(
         "--carry-unreported-reservation",
         action="store_true",

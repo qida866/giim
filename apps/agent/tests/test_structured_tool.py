@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from giim_agent.fake import FakeModel
 from giim_agent.runtime import ask
-from giim_agent.schemas import ResearchBundle, Draft
+from giim_agent.schemas import ResearchBundle, Draft, Verification
 
 
 @pytest.mark.parametrize(
@@ -108,18 +108,20 @@ def test_citation_article_id_validation_remains_strict(bad_id):
         )
 
 
-async def test_writer_uses_native_json_schema_without_weakening_local_validation():
+@pytest.mark.parametrize("role,schema", [("writer", Draft), ("verifier", Verification)])
+async def test_roles_use_native_json_schema_without_weakening_local_validation(role, schema):
     from giim_agent.hooks import Hooks
     from giim_agent.budget import Budget, Limits
     from giim_agent.trace import Trace
     from google.adk.models.llm_request import LlmRequest
 
-    context = SimpleNamespace(agent_name="writer", state={"question": "Authored question"})
+    context = SimpleNamespace(agent_name=role, state={"question": "Authored question"})
     request = LlmRequest(
-        model="gemini-3.5-flash-lite", config=types.GenerateContentConfig(response_schema=Draft)
+        model="gemini-3.5-flash-lite", config=types.GenerateContentConfig(response_schema=schema)
     )
     await Hooks(Budget(Limits()), Trace("Authored question", "fake")).before(context, request)
     assert request.config.response_schema is None
     assert request.config.response_mime_type == "application/json"
-    assert request.config.response_json_schema == Draft.model_json_schema()
-    assert Draft.model_config["extra"] == "forbid"
+    assert request.config.response_json_schema == schema.model_json_schema()
+    assert schema.model_config["extra"] == "forbid"
+    json.dumps(request.config.model_dump(mode="json", exclude_none=True))

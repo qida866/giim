@@ -266,3 +266,91 @@ async def test_provider_diagnostics_never_store_exception_message():
             pass
     assert records == [{"role": "writer", "exception_type": "ValueError"}]
     assert "private-exception-canary" not in json.dumps(records)
+
+
+def test_retest_scope_and_budget_are_independent_and_smaller(tmp_path):
+    approval, calls, cost, cases = trial.round_config("retest-abc")
+    assert approval != trial.APPROVAL
+    assert (calls, cost) == (30, 0.30)
+    assert [case for case, _ in cases] == list("ABC")
+    meter, completed = trial.resume_state(None, round_name="retest-abc")
+    assert not completed and meter.max_calls == 30 and meter.max_usd == 0.30
+    meter.calls = 30
+    with pytest.raises(SafetyError, match="trial_budget"):
+        meter.reserve(request())
+    meter.calls, meter.reserved_usd = 0, 0.299
+    with pytest.raises(SafetyError, match="trial_budget"):
+        meter.reserve(request())
+    prior = {
+        "model": trial.MODEL,
+        "attempted_model_calls": 3,
+        "reserved_usd": 0.02,
+        "observed_estimated_usd": 0.001,
+        "results": [{"case": "A", "answer": {"trace": {"model_calls": 3}}}],
+    }
+    path = tmp_path / "prior.json"
+    path.write_text(json.dumps(prior))
+    with pytest.raises(SafetyError, match="resume_budget"):
+        trial.resume_state(path, round_name="retest-abc")
+    prior["round"] = "retest-abc"
+    path.write_text(json.dumps(prior))
+    resumed, done = trial.resume_state(path, round_name="retest-abc")
+    assert resumed.calls == 3 and resumed.max_calls == 30 and resumed.reserved_usd == 0.02
+    assert [case for case, _ in cases[len(done) :]] == list("BC")
+    prior["results"].append({"case": "D", "answer": {"trace": {"model_calls": 0}}})
+    path.write_text(json.dumps(prior))
+    with pytest.raises(SafetyError, match="resume_cases"):
+        trial.resume_state(path, round_name="retest-abc")
+
+
+async def test_original_approval_cannot_authorize_retest(monkeypatch, tmp_path):
+    from argparse import Namespace
+
+    monkeypatch.setenv("GIIM_LIVE_TRIAL_APPROVAL", trial.APPROVAL)
+    monkeypatch.setenv("GIIM_ENABLE_LIVE_GEMINI", "1")
+    monkeypatch.setenv("GOOGLE_API_KEY", "synthetic-test-canary")
+    with pytest.raises(SafetyError, match="trial_approval"):
+        await trial.run(Namespace(live=True, round="retest-abc", output=tmp_path / "unused"))
+    assert not (tmp_path / "unused").exists()
+
+
+async def test_retest_dispatches_only_abc_and_preserves_existing_outputs(monkeypatch, tmp_path):
+    from argparse import Namespace
+    from types import SimpleNamespace
+
+    monkeypatch.setenv("GIIM_LIVE_TRIAL_APPROVAL", trial.RETEST_APPROVAL)
+    monkeypatch.setenv("GIIM_ENABLE_LIVE_GEMINI", "1")
+    monkeypatch.setenv("GOOGLE_API_KEY", "synthetic-test-canary")
+    called = []
+
+    async def no_network_preflight(settings):
+        return {}
+
+    async def no_network_ask(question, **kwargs):
+        called.append(question)
+        trace = {"model_calls": 0}
+        directory = kwargs["trace_dir"]
+        directory.mkdir(exist_ok=True)
+        (directory / "authored.jsonl").write_text("")
+        return SimpleNamespace(
+            request_id="authored",
+            failure_category=None,
+            status="verified",
+            model_dump=lambda **_: {"trace": trace},
+        )
+
+    monkeypatch.setattr(trial, "preflight", no_network_preflight)
+    monkeypatch.setattr(trial, "ask", no_network_ask)
+    monkeypatch.setattr(trial, "checks", lambda *args: {"dispatch_test_only": True})
+    args = Namespace(
+        live=True, round="retest-abc", api="http://127.0.0.1:8000", output=tmp_path / "round2"
+    )
+    assert await trial.run(args) == 0
+    assert called == [question for _, question in trial.CASES[:3]]
+    saved = (args.output / "results.json").read_bytes()
+    result = json.loads(saved)
+    assert result["round"] == "retest-abc"
+    assert [row["case"] for row in result["results"]] == list("ABC")
+    with pytest.raises(FileExistsError):
+        await trial.run(args)
+    assert len(called) == 3 and (args.output / "results.json").read_bytes() == saved

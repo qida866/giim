@@ -1,0 +1,19 @@
+{
+  "prior_evidence_commit": "e65f8e3c7ae101e106ddba9abc1c134e4bd6fba7",
+  "sha256": {
+    "data-preservation.json": "4502d4a8554af0cb649a99c65d0c74e8e0bb97a1a8712bd4c8082bb99fa16de4",
+    "role-responses.json": "88e60e784cb78137e68e1890327ded1961f29e0733c9b9f455f7e0b7073ddad7",
+    "installed-regressions.txt": "e2483ce7d48692e33b7c74d5073799d36a8857f618368cc62e473f8ec8a0f641",
+    "mocked-evaluation.json": "cc25c9d743aa3826435e1c8acf9b86dfb586f83a58de8e91949da3041e455209",
+    "commands.md": "f1978331f504d6652848b3288450a72dda3e9e03b5f31cbadbac966309712436",
+    "results.json": "03db9d51280f645172e6996a8ab1119b35a4da2f5ee3d6f9408fdf9a32883413",
+    "structured-before.txt": "0c56c52612c228cb438e8535616306a1a8567c748f56b2147aebae8b2303d85f",
+    "final-regressions.txt": "ec0a1d46a541df1c0fed08eaf040dd4fcfce874ce777afc67f451ea564665a09",
+    "traces.jsonl": "19a63ec9eb4f21a2c572e99eaeb9da9f0ea5b5f9305d1c7bc925154d8076a38f",
+    "fix-targeted-final.txt": "a5b1ed40dfd1c7f4d5549e942d7a89b1832eb87ef9a6410443cc3f74e4c7b22f",
+    "security-review.json": "79f5da2f72733a7ad16f7bd5ea215eb01211e278e41ede4b1106828894a7e0e8",
+    "trace-summary.json": "52fdbdf3fa3e0c4db0ac5f14a097ad6298f91bbd5eaf832a8de8cf1c995a94be",
+    "writer-schema-before.txt": "9e6dfb7f5850aa277da3187c5adec6c304df1bab6573253e863a8fdf29e1528d"
+  },
+  "live_calls_during_preparation": 0
+}
