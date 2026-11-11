@@ -1,0 +1,7 @@
+{
+  "scope": "All tracked/unignored files checked for exact available credential values and high-confidence key/private-key patterns. This is not a comprehensive historical audit.",
+  "findings_paths": [],
+  "credentials_exposed": false,
+  "new_google_api_calls": 0,
+  "evidence_scope": "Authored data only; local HTTP stub uses synthetic canary key."
+}

@@ -1,6 +1,6 @@
 # GIIM Task 2 verification and acceptance report
 
-**Current decision: NOT YET FULLY LIVE-ACCEPTED.** The [approved A/B/C retest](TASK2_GEMINI_RETEST_REPORT.md) produced C PASS, B FAIL (uncertainty compliance) and A BLOCKED (provider HTTP 503). Preserved D/E results give **three of five original scenarios with passing real-model evidence**. A/B still need successful live verification; no reliable five-scenario demonstration or production-readiness claim is supported.
+**Current decision: NOT YET FULLY LIVE-ACCEPTED.** The [latest A/B reliability work](TASK2_AB_RELIABILITY_REPORT.md) adds budget-aware transient retries and an explicit strict uncertainty contract; 175 local component tests and 130 backend tests pass. No new Gemini calls were made for those changes. The [approved A/B/C retest](TASK2_GEMINI_RETEST_REPORT.md) produced C PASS, B FAIL (uncertainty compliance) and A BLOCKED (provider HTTP 503). Preserved D/E results give **three of five original scenarios with passing real-model evidence**. A/B still need successful live verification; no reliable five-scenario demonstration or production-readiness claim is supported.
 
 The targeted Writer/Verifier instruction and schema-description clarification is locally tested: **133 component tests passed**. The deterministic citation/uncertainty gate remains unchanged. All first-round evidence is preserved. See the retest report for actual responses, traces, 17 model attempts, one missing usage record, $0.0100431 known-response subtotal and $0.1169647 conservative reservation.
 

@@ -1,5 +1,7 @@
 # GIIM Task 2 engineering report
 
+**Latest reliability follow-up:** [A/B retry and uncertainty fixes](TASK2_AB_RELIABILITY_REPORT.md) passed 175 local component tests and 130 backend regressions. New live A/B verification awaits approval; historical live acceptance remains three of five.
+
 **Follow-up acceptance audit:** see [TASK2_ACCEPTANCE_REPORT.md](TASK2_ACCEPTANCE_REPORT.md) for fresh executions, the irrelevant-evidence bug found in the fake Verifier, its fix, and the expanded 107-test result. This original implementation report remains a dated record of its stated commit and must not supersede the acceptance findings.
 
 November 10, 2026. Branch: `feature/mcp-agent`. Validated implementation commit: **`74b64d380078c05f7bdad0b69e6f0517b62e3801`**. The documentation/evidence commit follows this code commit. See [exact commands and environment](../evidence/mcp-agent/commands.md), [usage guide](../mcp-agent.md) and [complete changed-file manifest](../evidence/mcp-agent/files-changed.txt).

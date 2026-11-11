@@ -142,7 +142,7 @@ Open `http://127.0.0.1:8002` and select `giim_analyst`. Keep this development UI
 
 ## Optional live Gemini — manual approval required
 
-**BLOCKED — MANUAL VERIFICATION REQUIRED.** No live calls were made. The Gemini adapter, configuration and retry options were tested with mocked constructors, not a provider response. After explicit authorization for paid calls, provision `GOOGLE_API_KEY` privately, set `GIIM_ENABLE_LIVE_GEMINI=1`, and choose a currently available model using `GIIM_AGENT_MODEL`. Optional `GIIM_RESEARCHER_MODEL`/`GIIM_VERIFIER_MODEL` override their roles; CLI `--model` overrides the general model. Authentication uses the Gemini API, explicitly not Vertex AI.
+**PARTIAL LIVE ACCEPTANCE.** Historical live tests passed C/D/E; A/B still need successful verification. The [A/B reliability report](reports/TASK2_AB_RELIABILITY_REPORT.md) documents bounded provider retries, explicit uncertainty output, 175 local component tests, and the new approval-gated live procedure. The latest local changes have not made additional Gemini calls. After explicit authorization for paid calls, provision `GOOGLE_API_KEY` privately, set `GIIM_ENABLE_LIVE_GEMINI=1`, and choose a currently available model using `GIIM_AGENT_MODEL`. Optional `GIIM_RESEARCHER_MODEL`/`GIIM_VERIFIER_MODEL` override their roles; CLI `--model` overrides the general model. Authentication uses the Gemini API, explicitly not Vertex AI.
 
 ```sh
 # Only after approval, with private key and licensed evidence already configured:
@@ -150,14 +150,15 @@ export GIIM_ENABLE_LIVE_GEMINI=1
 python -m giim_agent ask "Which AI events have supporting evidence?" --live --trace --json
 ```
 
-For ADK CLI/Web, also set `GIIM_ADK_DEMO=0 GIIM_ADK_LIVE=1`. Demo and live modes are mutually exclusive. Provider timeout is 20 seconds with two total attempts. Check provider errors, schema support, tool selection, relevance, refusals, latency and measured usage on approved data before any production claim. Successful citation checks do not establish a source's truth or an answer's relevance.
+For ADK CLI/Web, also set `GIIM_ADK_DEMO=0 GIIM_ADK_LIVE=1`. Demo and live modes are mutually exclusive. Provider timeout is 20 seconds. Explicit equal-jitter exponential backoff allows at most two retries per logical model invocation for allowlisted transient errors; SDK retries are disabled. Every attempt, including retries, shares the ten-attempt request budget and the request deadline. Failed attempts retain their token/cost reservations and unknown usage. Check provider errors, schema support, tool selection, relevance, refusals, latency and measured usage on approved data before any production claim. Successful citation checks do not establish a source's truth or an answer's relevance.
 
 ## Execution and privacy boundaries
 
 | Bound | Default / hard maximum |
 |---|---|
 | Tool rounds / full details / total calls | 3 / 5 / 9 |
-| Model calls / draft iterations | 10 / 2 (one revision) |
+| Model attempts including provider retries / draft iterations | 10 / 2 (one revision) |
+| Provider retries per logical model invocation | 0–2; default 2; still subject to the shared request limits |
 | Output tokens per call | 2,048 |
 | Serialized model context | 65,000 bytes per call |
 | Conservative request token reservation | 120,000 (UTF-8 input bytes plus reserved output tokens) |

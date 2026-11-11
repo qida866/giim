@@ -1,0 +1,19 @@
+........................................................................ [ 41%]
+........................................................................ [ 82%]
+..............................                                           [100%]
+=============================== warnings summary ===============================
+tests/test_provider_retry.py::test_pinned_gemini_sdk_http_503_has_no_hidden_retry
+  /usr/local/lib/python3.11/site-packages/google/genai/_api_client.py:1305: DeprecationWarning: Inheritance class AiohttpClientSession from ClientSession is discouraged
+    class AiohttpClientSession(aiohttp.ClientSession):  # type: ignore[misc]
+
+test_transport.py::test_authenticated_streamable_http_roundtrip
+  /usr/local/lib/python3.11/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+test_transport.py::test_authenticated_streamable_http_roundtrip
+  /usr/local/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+174 passed, 3 warnings in 31.69s
+No broken requirements found.
