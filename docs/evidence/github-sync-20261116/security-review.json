@@ -1,0 +1,10 @@
+{
+  "scope": "Current tracked/unignored files and every blob reachable from feature/mcp-agent; compared available private credential values plus high-confidence key patterns. Incoming objects separately identified. No credential values emitted. Not exhaustive secret detection, independent license review or provider credential validation.",
+  "files_scanned": 340,
+  "history_blobs_scanned": 493,
+  "incoming_blobs_scanned": 231,
+  "current_findings": [],
+  "history_findings": [],
+  "incoming_restricted_path_findings": [],
+  "historical_context": "Existing public history retains legacy development credential examples and author metadata. These are not new incoming content; previous rotation/history review documented in public release and Task 2 reports."
+}
